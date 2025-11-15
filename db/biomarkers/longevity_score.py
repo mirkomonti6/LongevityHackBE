@@ -159,12 +159,12 @@ class LongevityScoreCalculator:
             # Fallback to best_study if no singles found
             return biomarker_data.get('best_study')
         
-        # Filter 2: Reasonable hazard ratios (0.3 to 4.0)
+        # Filter 2: Reasonable hazard ratios (0.3 to 3.0)
         # Extreme HRs often indicate confounding or extreme populations
         reasonable_studies = []
         for study in single_biomarker_studies:
             hr = study['hazard_ratio']
-            if 0.3 <= hr <= 4.0:
+            if 0.3 <= hr <= 3.0:
                 reasonable_studies.append(study)
         
         if not reasonable_studies:
