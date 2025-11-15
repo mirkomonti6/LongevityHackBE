@@ -188,7 +188,6 @@ SMARTWATCH DATA (Recent Activity & Recovery):
 - Resting Heart Rate: {smartwatch_data['resting_heart_rate']} bpm
 - Daily Active Minutes: {smartwatch_data['active_minutes_per_day']} min (target: 60-150 min)
 - Daily Steps: {smartwatch_data['daily_steps_average']} steps
-- Sleep: {smartwatch_data['sleep_total_hours']}h total (Deep: {smartwatch_data['sleep_deep_hours']}h, REM: {smartwatch_data['sleep_rem_hours']}h)
 
 Activity/Recovery Gaps Identified:
 {gaps_summary if gaps_summary else "No major gaps - solid baseline!"}
@@ -232,7 +231,7 @@ YOUR MISSION:
       - Connect the dots: explain how BOTH biomarkers AND smartwatch data justify this intervention
       - If suggesting exercise/activity: cite their VO2 max value, active minutes, or step count
       - If suggesting stress management: reference their HRV value and what it indicates
-      - If suggesting sleep optimization: mention their deep sleep and REM hours specifically
+      # - If suggesting sleep optimization: mention their deep sleep and REM hours specifically
       - Explain how age, gender, and occupation influenced your choice
       - Why this is the #1 priority right now
       - Keep it friendly and conversational with emojis!
@@ -241,10 +240,10 @@ YOUR MISSION:
       - Use emojis naturally throughout (but don't overdo it!)
       - Keep it conversational and friendly - like "Hey!" not "Dear patient"
       - Weave in SPECIFIC smartwatch data naturally to back up your suggestions (e.g., "Looking at your smartwatch, you're only getting 25 active minutes per day when we need 60+...")
-      - When recommending action, justify it with their actual metrics (steps, HRV, VO2 max, sleep stages, active minutes)
+      - When recommending action, justify it with their actual metrics (steps, HRV, VO2 max, active minutes)
       - If suggesting a sedentary person do more activity, reference their low step count or active minutes
       - If suggesting stress management, cite their low HRV value
-      - If suggesting sleep changes, mention their deep/REM sleep hours
+      # - If suggesting sleep changes, mention their deep/REM sleep hours
       - Explain what they'll do in simple terms
       - Share the science in a friendly way - like "So this cool study from [Author, Year] found that [key result]"
       - Make it relatable with real-world benefits they'll actually care about
