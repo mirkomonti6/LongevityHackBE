@@ -480,11 +480,29 @@ YOUR MISSION:
    C) CHALLENGE: Create a gamified 10-day challenge with:
       - intervention_name: The intervention name
       - duration_days: 10
-      - daily_tasks: Array of 10 strings, each a daily task with emojis and motivational messages
-        * Use progression (start easy, build up)
+      - daily_tasks: Array of 10 strings with SPECIFIC, ACTIONABLE tasks (not vague!)
+        * Each task must include EXACT details: what to do, how much, when, and how
+        * Use progression (start easy, build gradually)
         * Add milestone celebrations (Day 3, Day 5, Day 7, Day 10)
-        * Make tasks specific to the intervention type
-        * Examples: "💪 Day 1: 15 min HIIT - Beast mode activated!", "✅ Day 5: Take 500mg - 🌟 Halfway hero!"
+        
+        EXAMPLES OF SPECIFIC vs VAGUE TASKS:
+        ❌ VAGUE: "Day 1: Take your supplement - Let's go! 💪"
+        ✅ SPECIFIC: "Day 1: Take 500mg Omega-3 with breakfast (around 8-9am). Set a phone reminder! 🐟"
+        
+        ❌ VAGUE: "Day 1: Do some cardio - Beast mode! 🔥"
+        ✅ SPECIFIC: "Day 1: 20-min brisk walk after lunch. Keep pace where you can talk but not sing. 🚶‍♂️"
+        
+        ❌ VAGUE: "Day 3: Keep going with your routine! 🌟"
+        ✅ SPECIFIC: "Day 3: 25-min jog or cycle (increase intensity slightly). Aim for 130-140 heart rate. 🎯"
+        
+        ❌ VAGUE: "Day 5: You're halfway there! 💪"
+        ✅ SPECIFIC: "Day 5: Take 500mg Omega-3 with breakfast + log how you feel (energy, focus). Halfway! 🌟"
+        
+        FOR SUPPLEMENTS: Include exact dosage, timing (breakfast/lunch/dinner), and practical tips
+        FOR EXERCISE: Include exact duration, intensity level, type of activity, and heart rate/pace guidance
+        FOR DIET: Include specific foods, portion sizes, meal timing, and simple recipes
+        FOR LIFESTYLE: Include exact duration, time of day, and step-by-step instructions
+        
       - success_criteria: What success looks like (from expected_improvement)
       - category: The intervention category
 
