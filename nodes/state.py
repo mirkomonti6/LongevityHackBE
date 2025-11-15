@@ -42,7 +42,7 @@ class GraphState(TypedDict):
     finalSuggestion: NotRequired[bool]  # Boolean indicating if suggestion is approved
     
     # Biohacker fields
-    userProfile: NotRequired[dict]  # {age: int, gender: str, job: str}
+    userProfile: NotRequired[dict]  # {age: int, gender: str, job: str, height_cm: float, weight_kg: float, sleep_hours_per_night: float, movement_days_per_week: int, work_activity_level: str, stress_level_1_to_10: int}
     bloodData: NotRequired[dict]  # {biomarker_name: value}
     smartwatchData: NotRequired[dict]  # {hrv, vo2_max, resting_heart_rate, active_minutes, sleep_stages}
     selectedIntervention: NotRequired[dict]  # Intervention from database

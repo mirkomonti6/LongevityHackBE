@@ -9,9 +9,10 @@ import os
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import Optional, Literal
+from typing import Optional, Literal, Dict, Any
 from langgraph_app import create_graph
 from nodes import GraphState
+from nodes.pdf_parser import NetMindLabExtractor
 
 # Load environment variables from .env file
 load_dotenv()
@@ -49,11 +50,24 @@ class PdfInput(BaseModel):
     data: Optional[str] = None
 
 
+class LabPdfInput(BaseModel):
+    """Lab PDF input model with filename, mime_type, and base64 data."""
+    filename: str
+    mime_type: str
+    base64: str
+
+
 class UserProfile(BaseModel):
     """User profile model for biohacker agent."""
     age: int
     gender: Literal["male", "female", "other"]
-    job: str
+    job: Optional[str] = None
+    height_cm: Optional[float] = None
+    weight_kg: Optional[float] = None
+    sleep_hours_per_night: Optional[float] = None
+    movement_days_per_week: Optional[int] = None
+    work_activity_level: Optional[str] = None
+    stress_level_1_to_10: Optional[int] = None
 
 
 class BloodData(BaseModel):
@@ -81,6 +95,16 @@ class ApiInput(BaseModel):
     pdf: PdfInput = PdfInput()
     userProfile: Optional[UserProfile] = None
     bloodData: Optional[BloodData] = None
+    sex: Optional[Literal["male", "female", "other"]] = None
+    lab_pdf: Optional[LabPdfInput] = None
+    # Additional health metrics that can be passed directly (for backward compatibility)
+    age: Optional[int] = None
+    height_cm: Optional[float] = None
+    weight_kg: Optional[float] = None
+    sleep_hours_per_night: Optional[float] = None
+    movement_days_per_week: Optional[int] = None
+    work_activity_level: Optional[str] = None
+    stress_level_1_to_10: Optional[int] = None
 
 
 class ApiOutput(BaseModel):
@@ -135,7 +159,7 @@ async def health_check():
 
 
 @app.post("/execute", response_model=ApiResponse)
-async def execute_graph(request: ApiRequest):
+async def execute_graph(request: ApiInput):
     """
     Execute the LangGraph workflow.
     
@@ -143,7 +167,7 @@ async def execute_graph(request: ApiRequest):
     the final response and intervention name based on user input, messages, and PDF content.
     
     Args:
-        request: ApiRequest containing input with userInput, messages, and pdf
+        request: ApiInput containing userInput, messages, pdf, and health data
         
     Returns:
         ApiResponse with output containing response text and intervention_name (if approved)
@@ -158,19 +182,78 @@ async def execute_graph(request: ApiRequest):
         )
     
     try:
-        # Map ApiRequest.input to GraphState
-        initial_state: GraphState = {
-            "userInput": request.input.userInput,
-            "messages": [msg.model_dump() for msg in request.input.pastMessages],
-            "pdf": request.input.pdf.model_dump()
+        # Initialize blood data dictionary
+        blood_data_dict: Dict[str, Any] = {}
+        
+        # Handle lab_pdf parsing if provided
+        if request.lab_pdf:
+            try:
+                # Instantiate the PDF parser
+                extractor = NetMindLabExtractor()
+                
+                # Extract structured data from base64 PDF
+                lab_results = extractor.extract_from_base64(
+                    base64_string=request.lab_pdf.base64,
+                    filename=request.lab_pdf.filename
+                )
+                
+                # Extract biomarkers from the tests array
+                if "tests" in lab_results and isinstance(lab_results["tests"], list):
+                    for test in lab_results["tests"]:
+                        test_name = test.get("name", "").lower().replace(" ", "_")
+                        test_result = test.get("result")
+                        if test_name and test_result is not None:
+                            blood_data_dict[test_name] = test_result
+                            
+            except Exception as e:
+                print(f"Warning: Failed to parse lab PDF: {str(e)}")
+                # Continue execution even if PDF parsing fails
+        
+        # Merge with provided bloodData if any
+        if request.bloodData:
+            blood_data_dict.update(request.bloodData.to_dict())
+        
+        # Build userProfile from all available sources
+        user_profile_dict: Dict[str, Any] = {}
+        
+        # Start with existing userProfile if provided
+        if request.userProfile:
+            user_profile_dict = request.userProfile.model_dump(exclude_none=True)
+        
+        # Map sex to gender if provided (sex takes precedence)
+        if request.sex:
+            user_profile_dict["gender"] = request.sex
+        
+        # Add direct health metrics from top-level fields if provided
+        direct_fields = {
+            "age": request.age,
+            "height_cm": request.height_cm,
+            "weight_kg": request.weight_kg,
+            "sleep_hours_per_night": request.sleep_hours_per_night,
+            "movement_days_per_week": request.movement_days_per_week,
+            "work_activity_level": request.work_activity_level,
+            "stress_level_1_to_10": request.stress_level_1_to_10,
         }
         
-        # Add biohacker fields if provided
-        if request.input.userProfile:
-            initial_state["userProfile"] = request.input.userProfile.model_dump()
+        # Only add non-None values
+        for key, value in direct_fields.items():
+            if value is not None:
+                user_profile_dict[key] = value
         
-        if request.input.bloodData:
-            initial_state["bloodData"] = request.input.bloodData.to_dict()
+        # Map ApiInput to GraphState
+        initial_state: GraphState = {
+            "userInput": request.userInput,
+            "messages": [msg.model_dump() for msg in request.pastMessages],
+            "pdf": request.pdf.model_dump()
+        }
+        
+        # Add userProfile if we have any data
+        if user_profile_dict:
+            initial_state["userProfile"] = user_profile_dict
+        
+        # Add bloodData if we have any data
+        if blood_data_dict:
+            initial_state["bloodData"] = blood_data_dict
         
         # Execute the graph
         final_state = graph_app.invoke(initial_state)
