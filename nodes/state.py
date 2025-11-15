@@ -25,8 +25,6 @@ class GraphState(TypedDict):
     Biohacker-specific fields:
     - userProfile: User demographic data (age, gender, job)
     - bloodData: Dictionary of biomarker names to values
-    - longevityScore: Current health/longevity score calculation
-    - previousLongevityScore: Previous score for comparison
     - selectedIntervention: The chosen intervention from the database
     - challenge: 10-day challenge routine for user engagement
     - scientificReferences: References supporting the recommendation
@@ -46,8 +44,6 @@ class GraphState(TypedDict):
     # Biohacker fields
     userProfile: NotRequired[dict]  # {age: int, gender: str, job: str}
     bloodData: NotRequired[dict]  # {biomarker_name: value}
-    longevityScore: NotRequired[dict]  # Score calculation results
-    previousLongevityScore: NotRequired[dict]  # Previous score for tracking
     selectedIntervention: NotRequired[dict]  # Intervention from database
     challenge: NotRequired[dict]  # 10-day challenge routine
     scientificReferences: NotRequired[list]  # List of references

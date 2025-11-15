@@ -7,8 +7,13 @@ safety, scientific accuracy, feasibility, and personalization.
 
 import os
 import json
+import logging
 from openai import OpenAI
 from .state import GraphState
+
+# Configure logging
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 NETMIND_API_KEY = "6ecc3bdc2980400a8786fd512ad487e7"
 
@@ -29,15 +34,21 @@ def critic_node(state: GraphState) -> GraphState:
     Returns:
         Updated state with critique, response, and finalSuggestion (boolean)
     """
+    logger.info("=== Critic Node Started ===")
+    
     # Extract data from state
     suggestion = state.get("suggestion", "")
     user_profile = state.get("userProfile", {})
     blood_data = state.get("bloodData", {})
     selected_intervention = state.get("selectedIntervention", {})
-    longevity_score = state.get("longevityScore", {})
+    
+    logger.info(f"Evaluating suggestion for user: Age={user_profile.get('age')}, Gender={user_profile.get('gender')}")
+    if selected_intervention:
+        logger.info(f"Intervention to review: {selected_intervention.get('name')} ({selected_intervention.get('category')})")
     
     # Handle missing suggestion
     if not suggestion or "Error:" in suggestion:
+        logger.warning("No valid suggestion to evaluate")
         return {
             "critique": "Unable to evaluate: No valid suggestion provided.",
             "response": suggestion if suggestion else "No suggestion generated.",
@@ -46,6 +57,7 @@ def critic_node(state: GraphState) -> GraphState:
     
     # Use LLM to evaluate the suggestion
     try:
+        logger.info("Calling LLM for safety evaluation...")
         client = OpenAI(
             base_url="https://api.netmind.ai/inference-api/openai/v1",
             api_key=NETMIND_API_KEY
@@ -55,8 +67,7 @@ def critic_node(state: GraphState) -> GraphState:
         user_context = {
             "age": user_profile.get("age", "unknown"),
             "gender": user_profile.get("gender", "unknown"),
-            "job": user_profile.get("job", "unknown"),
-            "longevity_score": longevity_score.get("overall_score", "unknown") if longevity_score else "unknown"
+            "job": user_profile.get("job", "unknown")
         }
         
         intervention_context = {
@@ -116,6 +127,8 @@ Respond ONLY with valid JSON in this exact format:
             max_tokens=500
         )
         
+        logger.info("LLM evaluation response received")
+        
         # Parse LLM response
         llm_output = response.choices[0].message.content.strip()
         
@@ -133,6 +146,10 @@ Respond ONLY with valid JSON in this exact format:
         safety_concerns = evaluation.get("safety_concerns", [])
         recommendations = evaluation.get("recommendations", [])
         requires_medical = evaluation.get("requires_medical_consultation", False)
+        
+        logger.info(f"LLM Decision: {decision}")
+        if safety_concerns:
+            logger.info(f"Safety concerns: {safety_concerns}")
         
         # Determine approval
         final_suggestion_approved = (decision == "APPROVE")
@@ -165,6 +182,7 @@ Respond ONLY with valid JSON in this exact format:
             # If rejected, return only the critique
             final_response = f"{critique}\n\n*Original suggestion was not approved for safety reasons.*"
         
+        logger.info(f"=== Critic Node Completed: {'APPROVED' if final_suggestion_approved else 'REJECTED'} ===")
         return {
             "critique": critique,
             "response": final_response,
@@ -173,21 +191,26 @@ Respond ONLY with valid JSON in this exact format:
         
     except Exception as e:
         # Fallback if LLM fails - default to cautious approval with warnings
-        print(f"LLM Error in critic_node: {str(e)}")
+        logger.error(f"LLM Error in critic_node: {str(e)}", exc_info=True)
+        
+        logger.info("Using fallback safety evaluation")
         
         # Basic safety check - reject if user is very young or very old without human review
         age = user_profile.get("age", 30)
         if age < 18 or age > 75:
+            logger.warning(f"Age-based caution triggered: {age} years old")
             fallback_critique = f"⚠️ Due to your age ({age}), this recommendation requires professional medical review before implementation. Please consult with a healthcare provider."
             fallback_approved = False
             fallback_response = f"{fallback_critique}\n\n*Automated safety check: Age-based caution triggered.*"
         else:
+            logger.info("Fallback: cautious approval with disclaimers")
             # Cautious approval with disclaimers
             fallback_critique = "✅ Preliminary safety check passed. However, please consult with a healthcare professional before starting any new health intervention, especially if you have existing medical conditions or take medications."
             fallback_approved = True
             disclaimer = "\n\n*Disclaimer: This information is for educational purposes only and is not medical advice. Consult with a qualified healthcare provider before making any changes to your health regimen.*"
             fallback_response = f"{suggestion}\n\n{fallback_critique}{disclaimer}"
         
+        logger.info(f"=== Critic Node Completed (Fallback): {'APPROVED' if fallback_approved else 'REJECTED'} ===")
         return {
             "critique": fallback_critique,
             "response": fallback_response,

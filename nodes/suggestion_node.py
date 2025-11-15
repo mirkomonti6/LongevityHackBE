@@ -7,11 +7,16 @@ using an LLM to intelligently select interventions and create engagement challen
 
 import os
 import json
+import logging
 from typing import Dict, List, Any
 from openai import OpenAI
 from .state import GraphState
 from .biohacker_db import get_all_interventions, get_interventions_by_biomarker
-from .longevity_calculator import calculate_longevity_score, identify_problematic_biomarkers
+from .longevity_calculator import identify_problematic_biomarkers
+
+# Configure logging
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 NETMIND_API_KEY = "6ecc3bdc2980400a8786fd512ad487e7"
 
@@ -99,29 +104,33 @@ def suggestion_node(state: GraphState) -> GraphState:
     Biohacker agent that analyzes health data and generates personalized recommendations.
     
     This node:
-    1. Calculates longevity score from blood data
-    2. Identifies problematic biomarkers
-    3. Queries intervention database
-    4. Uses LLM to select best intervention and generate personalized message
-    5. Creates 10-day challenge
+    1. Identifies problematic biomarkers
+    2. Queries intervention database
+    3. Uses LLM to select best intervention and generate personalized message
+    4. Creates 10-day challenge
     
     Args:
         state: The current graph state with userProfile and bloodData
         
     Returns:
-        Updated state with suggestion, challenge, references, and longevity score
+        Updated state with suggestion, challenge, and references
     """
+    logger.info("=== Suggestion Node Started ===")
+    
     # Extract data from state
     user_profile = state.get("userProfile", {})
     blood_data = state.get("bloodData", {})
     user_input = state.get("userInput", "")
     messages = state.get("messages", [])
     
+    logger.info(f"User profile: Age={user_profile.get('age')}, Gender={user_profile.get('gender')}, Job={user_profile.get('job')}")
+    logger.info(f"Blood data biomarkers: {list(blood_data.keys()) if blood_data else 'None'}")
+    
     # Validate required data
     if not user_profile or not blood_data:
+        logger.warning("Missing required data: user_profile or blood_data")
         return {
-            "suggestion": "Error: User profile and blood data are required for biohacker recommendations.",
-            "longevityScore": None
+            "suggestion": "Error: User profile and blood data are required for biohacker recommendations."
         }
     
     # Extract user demographics
@@ -129,17 +138,15 @@ def suggestion_node(state: GraphState) -> GraphState:
     gender = user_profile.get("gender", "unknown")
     job = user_profile.get("job", "unknown")
     
-    # Calculate longevity score
-    longevity_result = calculate_longevity_score(blood_data, age, gender)
-    
     # Identify problematic biomarkers
-    problematic = longevity_result['problematic_markers']
+    problematic = identify_problematic_biomarkers(blood_data, threshold=80)
+    logger.info(f"Identified {len(problematic)} problematic biomarkers")
     
     # If no problematic markers, return general wellness message
     if not problematic:
+        logger.info("No problematic biomarkers found - returning wellness message")
         return {
-            "suggestion": f"Congratulations! Your longevity score is {longevity_result['overall_score']} ({longevity_result['grade']}). All biomarkers are in excellent ranges. Continue your current health practices!",
-            "longevityScore": longevity_result,
+            "suggestion": "Congratulations! All biomarkers are in excellent ranges. Continue your current health practices!",
             "problematicBiomarkers": [],
             "challenge": None
         }
@@ -148,6 +155,8 @@ def suggestion_node(state: GraphState) -> GraphState:
     candidate_interventions = []
     processed_ids = set()
     
+    logger.info(f"Searching interventions for top 3 problematic biomarkers: {[b[0] for b in problematic[:3]]}")
+    
     for biomarker_name, value, score, priority in problematic[:3]:  # Top 3 problematic
         interventions = get_interventions_by_biomarker(biomarker_name)
         for intervention in interventions[:3]:  # Top 3 interventions per biomarker
@@ -155,16 +164,19 @@ def suggestion_node(state: GraphState) -> GraphState:
                 candidate_interventions.append(intervention)
                 processed_ids.add(intervention['id'])
     
+    logger.info(f"Found {len(candidate_interventions)} candidate interventions")
+    
     # If no interventions found, return general message
     if not candidate_interventions:
+        logger.warning("No interventions found for problematic biomarkers")
         return {
-            "suggestion": f"Your longevity score is {longevity_result['overall_score']} ({longevity_result['grade']}). We're analyzing the best interventions for your specific biomarkers.",
-            "longevityScore": longevity_result,
+            "suggestion": "We're analyzing the best interventions for your specific biomarkers.",
             "problematicBiomarkers": problematic
         }
     
     # Use LLM to select best intervention and generate personalized message
     try:
+        logger.info("Calling LLM to select best intervention...")
         client = OpenAI(
             base_url="https://api.netmind.ai/inference-api/openai/v1",
             api_key=NETMIND_API_KEY
@@ -185,6 +197,8 @@ def suggestion_node(state: GraphState) -> GraphState:
                 "reference": intervention['scientific_references'][0] if intervention['scientific_references'] else {}
             })
         
+        logger.info(f"Presenting {len(interventions_summary)} interventions to LLM")
+        
         # Build conversation context
         conversation_context = ""
         if messages:
@@ -201,8 +215,6 @@ USER PROFILE:
 - Age: {age}
 - Gender: {gender}
 - Occupation: {job}
-
-LONGEVITY SCORE: {longevity_result['overall_score']}/100 (Grade: {longevity_result['grade']})
 
 PROBLEMATIC BIOMARKERS (priority order):
 {chr(10).join([f"- {name}: {value} (score: {score:.1f}/100, optimal range)" for name, value, score, priority in problematic[:5]])}
@@ -226,7 +238,7 @@ TASK:
 
 2. Generate a personalized, motivating message (200-300 words) that:
    - Addresses the user warmly and personally
-   - Explains their longevity score and what it means
+   - Explains their biomarker results and what they mean
    - Highlights the most important biomarker to improve
    - Recommends the selected intervention with confidence
    - Cites the scientific research supporting it (author, year, key finding)
@@ -249,6 +261,8 @@ Respond ONLY with valid JSON in this exact format:
             max_tokens=800
         )
         
+        logger.info("LLM response received")
+        
         # Parse LLM response
         llm_output = response.choices[0].message.content.strip()
         
@@ -263,6 +277,8 @@ Respond ONLY with valid JSON in this exact format:
         selected_id = llm_result.get("selected_intervention_id")
         personalized_message = llm_result.get("personalized_message")
         
+        logger.info(f"LLM selected intervention: {selected_id}")
+        
         # Find the selected intervention
         selected_intervention = None
         for intervention in candidate_interventions:
@@ -271,8 +287,10 @@ Respond ONLY with valid JSON in this exact format:
                 break
         
         if not selected_intervention:
+            logger.warning(f"Selected intervention {selected_id} not found, using fallback")
             selected_intervention = candidate_interventions[0]  # Fallback to first
         
+        logger.info(f"Generating 10-day challenge for: {selected_intervention['name']}")
         # Generate 10-day challenge
         challenge = generate_10_day_challenge(selected_intervention, user_profile)
         
@@ -282,9 +300,9 @@ Respond ONLY with valid JSON in this exact format:
         # Add challenge info to message
         full_message = f"{personalized_message}\n\n🎯 **Your 10-Day Challenge:**\nI've created a simple 10-day routine to help you get started with {selected_intervention['name']}. Complete each day's task and track your progress!"
         
+        logger.info("=== Suggestion Node Completed Successfully ===")
         return {
             "suggestion": full_message,
-            "longevityScore": longevity_result,
             "problematicBiomarkers": problematic,
             "selectedIntervention": selected_intervention,
             "challenge": challenge,
@@ -293,16 +311,16 @@ Respond ONLY with valid JSON in this exact format:
         
     except Exception as e:
         # Fallback if LLM fails
-        print(f"LLM Error in suggestion_node: {str(e)}")
+        logger.error(f"LLM Error in suggestion_node: {str(e)}", exc_info=True)
+        logger.info("Using fallback suggestion generation")
         fallback_intervention = candidate_interventions[0]
         challenge = generate_10_day_challenge(fallback_intervention, user_profile)
         references = format_scientific_references(fallback_intervention)
         
         top_biomarker = problematic[0][0]
+        logger.info(f"Fallback: recommending {fallback_intervention['name']} for {top_biomarker}")
         
-        fallback_message = f"""Your longevity score is {longevity_result['overall_score']}/100 (Grade {longevity_result['grade']}).
-
-Based on your blood work, your {top_biomarker} needs attention. I recommend: **{fallback_intervention['name']}**
+        fallback_message = f"""Based on your blood work, your {top_biomarker} needs attention. I recommend: **{fallback_intervention['name']}**
 
 {fallback_intervention['description']}
 
@@ -314,9 +332,9 @@ Based on your blood work, your {top_biomarker} needs attention. I recommend: **{
 
 Let's optimize your health together! 🚀"""
         
+        logger.info("=== Suggestion Node Completed (Fallback) ===")
         return {
             "suggestion": fallback_message,
-            "longevityScore": longevity_result,
             "problematicBiomarkers": problematic,
             "selectedIntervention": fallback_intervention,
             "challenge": challenge,
