@@ -1,0 +1,15 @@
+{
+  "age": 36,
+  "sex": "male",
+  "height_cm": 180,
+  "weight_kg": 78,
+  "sleep_hours_per_night": 7.5,
+  "movement_days_per_week": 3,
+  "work_activity_level": "moderate",
+  "stress_level_1_to_10": 6,
+  "lab_pdf": {
+    "filename": "blood test.png",
+    "mime_type": "image/png",
+    "base64": "iVBORw0KGgoAAAANSUhEUgAABAAAAAYACAIAAABn4K39AAEhmW..."
+  }
+}
