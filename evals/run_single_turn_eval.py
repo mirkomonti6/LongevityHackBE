@@ -1,21 +1,21 @@
 """
-Run Deepeval against hard-coded single-turn LangGraph scenarios.
+Run Deepeval against hard-coded single-turn LangGraph scenarios using NetMind.
 
 This script:
 1. Builds the LangGraph workflow locally (no FastAPI server required).
 2. Executes the graph for each case defined in `single_turn_cases.py`.
 3. Wraps the resulting text in Deepeval `LLMTestCase`s.
-4. Scores them with lightweight correctness/relevancy metrics.
+4. Scores them with lightweight correctness/relevancy metrics using the NetMind
+   DeepSeek model as the judge (no OpenAI key required).
 
 Environment:
-    OPENAI_API_KEY (required by Deepeval metrics)
-    CONFIDENT_API_KEY (optional, unlocks hosted reporting)
-    NETMIND_API_KEY or built-in constant for suggestion/critic LLM calls
+    NETMIND_API_KEY (optional override; defaults to baked-in throwaway key)
 """
 
 from __future__ import annotations
 
 import json
+import os
 import sys
 from typing import List
 
@@ -27,6 +27,7 @@ from langgraph_app import create_graph
 from nodes import GraphState
 
 from evals.single_turn_cases import SINGLE_TURN_CASES
+from evals.netmind_llm import NetMindLLM
 
 
 def _extract_output(final_state: GraphState) -> str:
@@ -81,6 +82,9 @@ def _build_test_cases(app) -> List[LLMTestCase]:
 
 def main() -> None:
     """Entry point for CLI usage."""
+    # Force the NetMind key for throwaway eval runs.
+    os.environ.setdefault("NETMIND_API_KEY", "6ecc3bdc2980400a8786fd512ad487e7")
+
     app = create_graph()
     test_cases = _build_test_cases(app)
 
@@ -88,13 +92,15 @@ def main() -> None:
         print("No evaluation cases were built. Nothing to do.", file=sys.stderr)
         sys.exit(1)
 
+    judge = NetMindLLM()
     metrics = [
-        AnswerRelevancyMetric(threshold=0.3),
+        AnswerRelevancyMetric(threshold=0.3, model=judge),
         GEval(
             name="Behavioral-Expectation",
             criteria="Check whether the response references the biomarkers and wearable context described in the expected outcome.",
             evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
             threshold=0.3,
+            model=judge,
         ),
     ]
 
