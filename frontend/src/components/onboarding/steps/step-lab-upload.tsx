@@ -15,10 +15,10 @@ export function StepLabUpload({ data, onSetLabFile }: StepLabUploadProps) {
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
-    if (file && file.type === "application/pdf") {
+    if (file && (file.type === "application/pdf" || file.type === "image/png")) {
       onSetLabFile(file);
     } else if (file) {
-      alert("Please upload a PDF file");
+      alert("Please upload a PDF or PNG file");
     } else {
       onSetLabFile(null);
     }
@@ -36,7 +36,7 @@ export function StepLabUpload({ data, onSetLabFile }: StepLabUploadProps) {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".pdf"
+        accept=".pdf,.png,image/png"
         onChange={handleFileChange}
         className="hidden"
         id="lab-pdf-input"

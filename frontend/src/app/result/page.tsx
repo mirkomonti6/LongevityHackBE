@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 
 export default function ResultPage() {
   const router = useRouter();
-  const { primaryLever } = useAppState();
+  const { primaryLever, backendResponse } = useAppState();
 
   useEffect(() => {
     if (!primaryLever) {
@@ -25,36 +25,26 @@ export default function ResultPage() {
     router.push("/app/home");
   };
 
+  const habitName = backendResponse?.interventionName || primaryLever.name;
+  const habitDescription = backendResponse?.responseText || primaryLever.description;
+
   return (
     <div className="fixed inset-0 flex flex-col bg-background overflow-y-auto">
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 min-h-screen">
         <div className="w-full max-w-md space-y-8">
           <div className="space-y-4 text-center">
             <Badge variant="secondary" className="mb-2">
-              Your current #1 lever
+              Your recommended habit
             </Badge>
             <h1 className="text-3xl md:text-4xl font-bold leading-tight">
-              {primaryLever.name}
+              {habitName}
             </h1>
           </div>
 
           <Card className="p-6 space-y-4">
-            <h2 className="text-xl font-semibold">Key improvement</h2>
-            <p className="text-base text-muted-foreground">
-              {primaryLever.description}
-            </p>
-            <div className="pt-4 border-t space-y-2">
-              <p className="text-sm text-muted-foreground">
-                Estimated longevity impact
-              </p>
-              <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-bold text-primary">
-                  +{primaryLever.impactScore}
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                on a 0–100 impact score based on your profile
-              </p>
+            <h2 className="text-xl font-semibold">Recommendation</h2>
+            <div className="text-base text-muted-foreground whitespace-pre-wrap">
+              {habitDescription}
             </div>
           </Card>
 

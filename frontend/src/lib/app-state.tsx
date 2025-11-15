@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import type { OnboardingData } from "./onboarding-schema";
 import type { LeverResult, DailyEntry } from "./api-mock";
+import type { BackendResponse } from "./api";
 import {
   fetchPrimaryLever,
   saveDailyEntry,
@@ -16,11 +17,13 @@ interface AppState {
   dailyEntries: DailyEntry[];
   todayEntry: DailyEntry | null;
   isLoading: boolean;
+  backendResponse: BackendResponse | null;
 }
 
 interface AppStateContextValue extends AppState {
   setOnboardingData: (data: OnboardingData) => void;
   setPrimaryLever: (lever: LeverResult) => void;
+  setBackendResponse: (response: BackendResponse) => void;
   updateTodayEntry: (entry: Partial<DailyEntry>) => Promise<void>;
   refreshEntries: () => Promise<void>;
 }
@@ -35,6 +38,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [dailyEntries, setDailyEntries] = useState<DailyEntry[]>([]);
   const [todayEntry, setTodayEntry] = useState<DailyEntry | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [backendResponse, setBackendResponseState] = useState<BackendResponse | null>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem("longevity_app_onboarding_data");
@@ -51,6 +55,15 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       try {
         const lever = JSON.parse(storedLever);
         setPrimaryLeverState(lever);
+      } catch {
+      }
+    }
+
+    const storedBackendResponse = localStorage.getItem("longevity_app_backend_response");
+    if (storedBackendResponse) {
+      try {
+        const response = JSON.parse(storedBackendResponse);
+        setBackendResponseState(response);
       } catch {
       }
     }
@@ -73,6 +86,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const setPrimaryLever = useCallback((lever: LeverResult) => {
     setPrimaryLeverState(lever);
     localStorage.setItem("longevity_app_primary_lever", JSON.stringify(lever));
+  }, []);
+
+  const setBackendResponse = useCallback((response: BackendResponse) => {
+    setBackendResponseState(response);
+    localStorage.setItem("longevity_app_backend_response", JSON.stringify(response));
   }, []);
 
   const updateTodayEntry = useCallback(
@@ -104,8 +122,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         dailyEntries,
         todayEntry,
         isLoading,
+        backendResponse,
         setOnboardingData,
         setPrimaryLever,
+        setBackendResponse,
         updateTodayEntry,
         refreshEntries,
       }}

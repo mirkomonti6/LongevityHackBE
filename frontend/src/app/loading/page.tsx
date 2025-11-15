@@ -3,11 +3,16 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppState } from "@/lib/app-state";
+import {
+  executeBiohackerAgent,
+  buildBackendPayload,
+  fileToBase64,
+} from "@/lib/api";
 import { fetchPrimaryLever } from "@/lib/api-mock";
 
 export default function LoadingPage() {
   const router = useRouter();
-  const { onboardingData, setPrimaryLever } = useAppState();
+  const { onboardingData, setPrimaryLever, setBackendResponse } = useAppState();
 
   useEffect(() => {
     if (!onboardingData) {
@@ -17,17 +22,46 @@ export default function LoadingPage() {
 
     const loadLever = async () => {
       try {
-        const lever = await fetchPrimaryLever(onboardingData);
+        let labFileBase64: string | null = null;
+        let labFileName: string | null = null;
+
+        if (onboardingData.labPdfFile) {
+          try {
+            labFileBase64 = await fileToBase64(onboardingData.labPdfFile);
+            labFileName = onboardingData.labPdfFile.name;
+          } catch (error) {
+            console.error("Failed to convert file to base64:", error);
+          }
+        }
+
+        const payload = buildBackendPayload(
+          onboardingData,
+          labFileBase64,
+          labFileName,
+          onboardingData.labPdfFile?.type
+        );
+
+        const backendResponse = await executeBiohackerAgent(payload);
+        setBackendResponse(backendResponse);
+
+        const lever = {
+          type: "metabolic" as const,
+          name: backendResponse.interventionName || "Health Optimization",
+          description: backendResponse.responseText,
+          impactScore: 85,
+        };
         setPrimaryLever(lever);
         router.push("/result");
       } catch (error) {
-        console.error("Failed to fetch primary lever:", error);
+        console.error("Failed to fetch recommendation:", error);
+        const fallbackLever = await fetchPrimaryLever(onboardingData);
+        setPrimaryLever(fallbackLever);
         router.push("/result");
       }
     };
 
     loadLever();
-  }, [onboardingData, setPrimaryLever, router]);
+  }, [onboardingData, setPrimaryLever, setBackendResponse, router]);
 
   return (
     <div className="fixed inset-0 flex flex-col bg-background overflow-y-auto">

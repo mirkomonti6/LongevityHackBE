@@ -4,7 +4,7 @@ import { useAppState } from "@/lib/app-state";
 import { Card } from "@/components/ui/card";
 
 export default function ProgressPage() {
-  const { dailyEntries } = useAppState();
+  const { dailyEntries, backendResponse, primaryLever } = useAppState();
 
   const getStreakData = () => {
     const last10Days = dailyEntries.slice(0, 10);
@@ -48,6 +48,9 @@ export default function ProgressPage() {
     });
   };
 
+  const habitName = backendResponse?.interventionName || primaryLever?.name || "Your Habit";
+  const habitDescription = backendResponse?.responseText || primaryLever?.description || "";
+
   return (
     <div className="min-h-screen px-6 py-8 pb-24">
       <div className="max-w-md mx-auto space-y-8">
@@ -57,6 +60,22 @@ export default function ProgressPage() {
             Streak: {completed} / 10 days
           </p>
         </div>
+
+        {habitName && (
+          <Card className="p-6 space-y-4">
+            <div className="space-y-1">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Your current habit
+              </p>
+              <p className="text-xl font-bold">{habitName}</p>
+            </div>
+            {habitDescription && (
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                {habitDescription}
+              </p>
+            )}
+          </Card>
+        )}
 
         <div className="space-y-3">
           {dailyEntries.length === 0 ? (

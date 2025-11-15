@@ -4,6 +4,10 @@ __pycache__/
 *$py.class
 *.so
 .Python
+*.pyc
+*.pyo
+*.pyd
+*.egg
 
 # Virtual Environment
 venv/

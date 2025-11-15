@@ -9,7 +9,7 @@ import type { Adherence, Mood } from "@/lib/api-mock";
 import { useRouter } from "next/navigation";
 
 export default function HomePage() {
-  const { primaryLever, todayEntry, updateTodayEntry, dailyEntries } =
+  const { primaryLever, backendResponse, todayEntry, updateTodayEntry, dailyEntries } =
     useAppState();
   const router = useRouter();
   const [isSavingCheckin, setIsSavingCheckin] = useState(false);
@@ -102,12 +102,16 @@ export default function HomePage() {
         <Card className="p-6 space-y-4">
           <div className="space-y-1">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Your current lever
+              Your current habit
             </p>
-            <p className="text-2xl font-bold">{primaryLever.name}</p>
+            <p className="text-2xl font-bold">
+              {backendResponse?.interventionName || primaryLever.name}
+            </p>
           </div>
           <p className="text-sm text-muted-foreground">
-            {primaryLever.description.split(".")[0]}.
+            {backendResponse?.responseText
+              ? backendResponse.responseText.split(".")[0] + "."
+              : primaryLever.description.split(".")[0] + "."}
           </p>
           <div className="pt-2 space-y-1">
             <p className="text-xs text-muted-foreground">
@@ -125,10 +129,10 @@ export default function HomePage() {
         <Card className="p-6 space-y-4">
           <div className="space-y-2">
             <h2 className="text-lg font-semibold">
-              Did you follow this focus today?
+              Did you follow this habit today?
             </h2>
             <p className="text-sm text-muted-foreground">
-              {primaryLever.description.split(".")[0]}.
+              {backendResponse?.interventionName || primaryLever.name}
             </p>
           </div>
           <div className="flex gap-3">
