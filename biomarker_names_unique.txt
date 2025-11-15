@@ -1,0 +1,475 @@
+17beta-E(2)
+25-hydroxyvitamin D
+Abdominal aortic calcification
+Abdominal subcutaneous fat
+Abnormal P terminal force
+Abnormal T-wave axis
+Abnormal p-wave axis
+Adiponectin
+Adiponectin and N-terminal pro-brain natriuretic peptide
+Adiponectin and body mass index
+Alanine transaminase
+Albumin, serum/plasma
+Albumin-to-creatinine ratio
+Albumin-to-creatinine ratio and metabolic syndrome
+Albuminuria
+Alkaline phosphatase
+Allostatic load score
+Alpha-1-acid glycoprotein
+Alpha-1-antichymotrypsin
+Ambulatory heart rate
+Amino-terminal peptide of procollagen type III
+Amino-terminal propeptide of type I collagen
+Angiopoietin-2
+Anion gap, serum albumin adjusted
+Ankle brachial pressure
+Ankle width
+Ankle-brachial index
+Antinuclear autoantibodies
+Aortic augmentation index
+ApoB/ApoA1 ratio
+Apolipoprotein A-1
+Arm circumference
+Ascorbic acid
+Aspartate aminotransferase
+Asymmetric dimethylarginine
+Atrial fibrillation
+Atrial premature complexes
+Atrioventricular block
+Axis deviation
+BMI + Predicted forced expiratory volume in 1 second percentile (FEV1%)
+BMI and sedentary mobility
+Basal metabolic rate
+Basophil count
+Basophil percentage
+Bicarbonate
+Bilirubin
+Bioelectrical impedance
+Blood pressure
+Body adiposity index
+Body fat mass index
+Body fat percentage
+Body mass index
+Body mass index and leg extensor strength
+Body mass index squared
+Body water mass
+Bone density
+Bone mineral density
+Brachial-ankle pulse wave velocity
+Brain natriuretic peptide
+Broadband ultrasound attenuation
+Butyrylcholinesterase activity
+C-reactive protein
+C-reactive protein (high-sensitivity), white blood cell count, and serum albumin
+C-reactive protein + high-density lipoprotein cholesterol
+C-reactive protein, albumin, gamma-glutamyl transferase, and high-density lipoprotein cholesterol
+C-reactive protein, high-sensitivity
+CD4:CD8 ratio
+CD8 cells
+CMV seropositivity
+Calbindin
+Calf circumference
+Carboxyl-terminal telopeptide of collagen type I
+Cardiac calcification
+Cardiac troponin I
+Cardiac troponin T, high-sensitivity
+Cardiorespiratory fitness
+Carotenes
+Carotenoids
+Carotid artery plaque
+Carotid intima-media thickness
+Carotid/brachial pulse pressure ratio
+Cell-free DNA concentration
+Cerebral vasomotor reactivity
+Cholesterol
+Chronotropic index
+Citrate
+Club (a.k.a. Clara) cell secretory protein
+Cornell voltage
+Coronary artery calcification score
+Coronary heart disease
+Cortisol
+Cotinine
+CpG island methylation
+CpG methylation score
+CpGs methylation pattern cg05575921 and cg06126421
+CpGs methylation pattern cg06126421
+Creatinine
+Creatinine excretion
+Cystatin C
+Deep terminal negativity of P wave in V1
+Delayed QRS transition
+Diabetes diagnosis
+Diabetes mellitus, type 2
+Distance from rump to crown
+Dual sensory impairment
+Early repolarization pattern
+Ejection fraction
+Electrocardiogram Minnesota code 7-1
+Electrocardiogram Minnesota code 9-4-2
+Electrocardiogram, any abnormality
+Electrocardiogram, major abnormalities
+Electrocardiographic changes
+Elevated waist circumference + elevated triglycerides
+Eosinophils percentage
+Estimated glomerular filtration rate
+Estradiol
+Estradiol-to-sex hormone binding globulin ratio
+Exercise capacity
+Expired air carbon monoxide
+Extracoronary calcification sites
+Extrinsic epigenetic age acceleration
+Factor VIII
+Factor VIIc
+Fat mass
+Fat percentage
+Fat-free mass
+Fat-free mass index
+Fatty liver index
+Fibrin D-dimer
+Fibrinogen
+Fibroblast growth factor-23
+Folate
+Follicle stimulating hormone
+Forced expiratory volume
+Forced expiratory volume in 1 s and forced expiratory volume in 6 s, ratio of
+Forced expiratory volume in 1 second
+Forced expiratory volume in 1 second divided by height
+Forced expiratory volume in 1 second, % of predicted value
+Forced expiratory volume in 1 second, percentage of predicted
+Forced expiratory volume in 1 second/height^3
+Forced vital capacity
+Forced vital capacity & inflammation-sensitive proteins
+Forced vital capacity, percentage of predicted
+Galectin-3
+Gamma-glutamyltransferase
+Global longitudinal speckle strain
+Glucose
+Glycated hemoglobin
+Graded exercise tolerance test score
+Growth differentiation factor 15
+Growth hormone
+H-FABP
+HBP+HG+HDL
+HBP+HG+TG+HDL
+Heart rate
+Heart rate recovery
+Heart rate variability
+Heart rate variability, high frequency power, natural logarithm
+Heart rate variability, low frequency power, natural logarithm
+Heart rate variability, slope of the power-law regression line of
+Heart rate variability, total power, natural logarithm
+Heart rate variability, very low frequency power, natural logarithm
+Heart rate, rest-to-peak
+Height
+Hematocrit
+Hemoglobin
+High R wave
+High-density lipoprotein and blood pressure
+High-density lipoprotein cholesterol
+High-density lipoprotein cholesterol and total cholesterol
+Hip circumference
+Homeostatic model assessment of insulin resistance
+Homoarginine
+Homocysteine
+Hyperthyroidism
+Hypothyroidism
+IgA
+IgA to tissue transglutaminase
+IgG
+IgM
+Immature reticulocytes fraction
+Insulin
+Insulin-like growth factor 1
+Insulin-like growth factor binding protein 1
+Insulin-like growth factor binding protein 2
+Insulin-like growth factor binding protein 3
+Interday rhythm stability
+Interleukin 1-beta
+Interleukin-10
+Interleukin-6
+Interleukin-6 and tumor necrosis factor-alpha
+Interleukin-8
+Interventricular septum thickness
+Intima-media echogenicity
+Intraday circadian fragmentation
+Intrinsic epigenetic age acceleration
+Iron
+Ischemic heart disease, electrocardiographic evidence
+Kidney injury molecule-1
+Klotho
+LMS-defined restrictive pattern
+Large-vessel peripheral artery disease
+Lead
+Lean body mass
+Lean mass index
+Left carotid intima-media thickening
+Left ventricular ejection fraction
+Left ventricular hypertrophy
+Leptin
+Leptin and C-reactive protein
+Leukocyte telomere length
+Lipid accumulation product
+Lipoprotein-associated phospholipase A2 activity
+Loss of Y chromosome
+Low frequency power of heart rate variability
+Low-density lipoprotein cholesterol
+Lower carotid distensibility
+Lutein
+Lycopene
+Lymphocyte count
+Lymphocyte percentage
+Magnesium
+Mean arterial pressure
+Mean corpuscular hemoglobin
+Mean corpuscular volume
+Mean platelet volume
+Mean reticulocytes volume
+Mean sphered cells volume
+Metabolic syndrome
+Microalbuminuria
+Mid upper arm circumference
+Mitochondrial DNA copy number
+Mitral diastolic early-to-late ratio
+Monocyte count
+Monocyte percentage
+Muscle mass index
+Myeloperoxidase
+Myocardial infarction
+N-terminal atrial natriuretic peptide
+N-terminal pro-brain natriuretic peptide
+Neutrophil gelatinase-associated lipocalinin
+Neutrophil number
+Neutrophilia
+Neutrophils percentage
+Non-exercise testing for fitness score
+Non-high-density lipoprotein cholesterol
+Obesity (BMI >= 30)
+Obesity + insulin resistance
+Orthostatic hypotension
+Osteocalcin
+Osteoprotegerin
+Oxygen saturation
+Oxygenated carotenoids
+P wave duration
+PR interval
+Parathyroid hormone
+Peak expiratory flow
+Pericardial adipose tissue volume
+Pericardial fat
+Peripheral artery disease
+Peroxiredoxin 4
+Phosphorus
+Plasma viscosity
+Platelet count
+Platelet distribution width
+Plateletcrit
+Postural hypotension
+Predicted mass
+Presenting visual acuity
+Prior myocardial infarction
+Proinsulin
+Prolactin
+Prolonged QT interval
+Proteinuria
+Pulmonary diffusing capacity for carbon monoxide
+Pulmonary diffusing capacity for carbon monoxide, percentage of predicted
+Pulse pressure
+Pulse rate
+Pulse-wave amplitude
+Q-QS
+QRS Transition, clockwise rotation
+QRS Transition, counterclockwise rotation
+QRS non-dipolar voltage
+QRS voltage, low
+QRS|T angle
+QRS|T angle + Left bundle branch block
+QRS|T angle + No bundle branch block
+QRS|T angle + Right bundle branch block
+QT interval
+QT prolongation
+QTc dispersion minimum value
+QTc interval
+QTrr
+QUI stiffness
+RR interval, natural logarithm of the standard deviation of normal
+RR intervals, standard deviation
+Red blood cell count
+Red blood cell distribution width
+Reflection magnitude
+Relative abdominal fat
+Relative heart volume
+Remnant cholesterol
+Renal artery calcification
+Resting heart rate
+Resting heart rate, change in
+Reticulocytes count
+Reticulocytes number
+Reticulocytes percentage
+Reticulocytes, high light scatter, number
+Reticulocytes, high light scatter, percentage
+Rheumatoid factor
+Right bundle branch block
+Romhilt-Estes left ventricular hypertrophy score
+SF-12-derived physical component summaries
+ST abnormalities
+ST depression
+ST-T segment changes
+STV5 gradient
+STV5 mean amplitude
+SUA
+Severe diastolic dysfunction
+Side step
+Sit-ups
+Skeletal muscle density
+Skeletal muscle mass
+Skinfold thickness
+Sleep-trough morning surge in systolic blood pressure
+Sodium, 24-hour excreted
+Sodium, plasma
+Soluble CD14
+Soluble ST2
+Soluble intracellular adhesion molecule-1
+Soluble tumour necrosis factor receptor 1
+Standing height
+Steps per day
+Strength
+Stromal cell derived factor
+Subclinical hyperthyroidism
+Subclinical hypothyroidism
+Subcutaneous adipose tissue quality
+Symmetrical dimethyl arginine
+T abnormality
+T cells
+T non-dipolar voltage
+T-axis deviation
+T-wave inversion
+T-wave residuum
+TFF-3
+TV1 mean amplitude
+TV5 mean amplitude
+Testosterone
+Testosterone and insulin-like growth factor I
+Testosterone-to-sex hormone binding globulin ratio
+Thigh circumference
+Thigh intramuscular fat
+Thoracic aorta calcification
+Thyroid stimulating hormone
+Thyroxine
+Total cholesterol to high-density lipoprotein cholesterol ratio
+Total thiols
+Triceps skinfold
+Triglyceride/HDL ratio
+Triglycerides
+Tumor necrosis factor alpha
+Type I collagen degradation
+Universal epigenetic age acceleration
+Unrecognized myocardial infarction
+Urea
+Uric acid
+Ventricular premature beats during exercise
+Vertical jump
+Very low density lipoprotein particle size
+Very-low-density lipoprotein
+Visceral adipose tissue quality
+Visceral fat area
+Visceral fat mass
+Visual acuity
+Vitamin A
+Waist circumference
+Waist-to-arm ratio
+Waist-to-calf ratio
+Waist-to-height ratio
+Waist-to-hip ratio
+Waist-to-thigh ratio
+Walking speed
+Weight
+Weight change
+White blood cell count
+YKL-40
+alpha-carotene
+beta-carotene
+beta-cryptoxanthin
+beta-trace protein
+cg00292432
+cg01065605
+cg01093854
+cg01310875
+cg01514859
+cg01723148
+cg02330352
+cg02772928
+cg02898994
+cg03402235
+cg03490711
+cg03576411
+cg03623394
+cg03967329
+cg03976645
+cg04373937
+cg05376185
+cg06281205
+cg06765172
+cg07161062
+cg07457727
+cg07735969
+cg07922411
+cg08529529
+cg09544380
+cg09693464
+cg10916429
+cg11308319
+cg11808581
+cg11950982
+cg12379145
+cg12484411
+cg12844117
+cg13009365
+cg13665021
+cg13735018
+cg14403741
+cg14575484
+cg15505642
+cg16054184
+cg16096311
+cg16197857
+cg16248783
+cg16781880
+cg16989443
+cg17835356
+cg18120323
+cg18533397
+cg18741439
+cg19174658
+cg19662895
+cg19733534
+cg20220255
+cg20585841
+cg21158502
+cg22927043
+cg23015983
+cg23324787
+cg23515619
+cg23524537
+cg23608075
+cg24197330
+cg24259629
+cg24319508
+cg24737067
+cg25468681
+cg25649038
+cg26078407
+cg26106417
+cg26160180
+cg26318321
+cg26989202
+cg27224642
+cg27257822
+cg27601809
+cg27635330
+pH
+sj/β-TREC ratio
+trans-lycopene
+von Willebrand factor
+α1-microglobulin
+β2-microglobulin

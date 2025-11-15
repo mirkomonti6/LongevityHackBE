@@ -1,0 +1,517 @@
+Biomarkers grouped by category:
+================================================================================
+
+
+Blood (165 biomarkers)
+--------------------------------------------------------------------------------
+  17beta-E(2)
+  25-hydroxyvitamin D
+  Adiponectin
+  Alanine transaminase
+  Albumin, serum/plasma
+  Alkaline phosphatase
+  Alpha-1-acid glycoprotein
+  Alpha-1-antichymotrypsin
+  Amino-terminal peptide of procollagen type III
+  Amino-terminal propeptide of type I collagen
+  Angiopoietin-2
+  Anion gap, serum albumin adjusted
+  Antinuclear autoantibodies
+  ApoB/ApoA1 ratio
+  Apolipoprotein A-1
+  Ascorbic acid
+  Aspartate aminotransferase
+  Asymmetric dimethylarginine
+  Basophil count
+  Basophil percentage
+  Bicarbonate
+  Bilirubin
+  Brain natriuretic peptide
+  Butyrylcholinesterase activity
+  C-reactive protein
+  C-reactive protein, high-sensitivity
+  CD4:CD8 ratio
+  CD8 cells
+  CMV seropositivity
+  Carboxyl-terminal telopeptide of collagen type I
+  Cardiac troponin I
+  Cardiac troponin T, high-sensitivity
+  Carotenes
+  Carotenoids
+  Cell-free DNA concentration
+  Cholesterol
+  Citrate
+  Club (a.k.a. Clara) cell secretory protein
+  Cotinine
+  Creatinine
+  Cystatin C
+  Eosinophils percentage
+  Estimated glomerular filtration rate
+  Estradiol
+  Estradiol-to-sex hormone binding globulin ratio
+  Factor VIII
+  Factor VIIc
+  Fibrin D-dimer
+  Fibrinogen
+  Fibroblast growth factor-23
+  Folate
+  Follicle stimulating hormone
+  Galectin-3
+  Gamma-glutamyltransferase
+  Glucose
+  Glycated hemoglobin
+  Growth differentiation factor 15
+  Growth hormone
+  H-FABP
+  Hematocrit
+  Hemoglobin
+  High-density lipoprotein cholesterol
+  Homeostatic model assessment of insulin resistance
+  Homoarginine
+  Homocysteine
+  IgA
+  IgA to tissue transglutaminase
+  IgG
+  IgM
+  Immature reticulocytes fraction
+  Insulin
+  Insulin-like growth factor 1
+  Insulin-like growth factor binding protein 1
+  Insulin-like growth factor binding protein 2
+  Insulin-like growth factor binding protein 3
+  Interleukin 1-beta
+  Interleukin-10
+  Interleukin-6
+  Interleukin-8
+  Iron
+  Klotho
+  Lead
+  Leptin
+  Leukocyte telomere length
+  Lipoprotein-associated phospholipase A2 activity
+  Loss of Y chromosome
+  Low-density lipoprotein cholesterol
+  Lutein
+  Lycopene
+  Lymphocyte count
+  Lymphocyte percentage
+  Magnesium
+  Mean corpuscular hemoglobin
+  Mean corpuscular volume
+  Mean platelet volume
+  Mean reticulocytes volume
+  Mean sphered cells volume
+  Mitochondrial DNA copy number
+  Monocyte count
+  Monocyte percentage
+  Myeloperoxidase
+  N-terminal atrial natriuretic peptide
+  N-terminal pro-brain natriuretic peptide
+  Neutrophil gelatinase-associated lipocalinin
+  Neutrophil number
+  Neutrophilia
+  Neutrophils percentage
+  Non-high-density lipoprotein cholesterol
+  Osteocalcin
+  Osteoprotegerin
+  Oxygenated carotenoids
+  Parathyroid hormone
+  Peroxiredoxin 4
+  Phosphorus
+  Plasma viscosity
+  Platelet count
+  Platelet distribution width
+  Plateletcrit
+  Proinsulin
+  Prolactin
+  Red blood cell count
+  Red blood cell distribution width
+  Remnant cholesterol
+  Reticulocytes count
+  Reticulocytes number
+  Reticulocytes percentage
+  Reticulocytes, high light scatter, number
+  Reticulocytes, high light scatter, percentage
+  Rheumatoid factor
+  SUA
+  Sodium, plasma
+  Soluble CD14
+  Soluble ST2
+  Soluble intracellular adhesion molecule-1
+  Soluble tumour necrosis factor receptor 1
+  Stromal cell derived factor
+  Subclinical hyperthyroidism
+  Subclinical hypothyroidism
+  Symmetrical dimethyl arginine
+  T cells
+  Testosterone
+  Testosterone-to-sex hormone binding globulin ratio
+  Thyroid stimulating hormone
+  Thyroxine
+  Total cholesterol to high-density lipoprotein cholesterol ratio
+  Total thiols
+  Triglyceride/HDL ratio
+  Triglycerides
+  Tumor necrosis factor alpha
+  Type I collagen degradation
+  Urea
+  Uric acid
+  Very low density lipoprotein particle size
+  Very-low-density lipoprotein
+  Vitamin A
+  White blood cell count
+  YKL-40
+  alpha-carotene
+  beta-carotene
+  beta-cryptoxanthin
+  beta-trace protein
+  sj/β-TREC ratio
+  trans-lycopene
+  von Willebrand factor
+  β2-microglobulin
+
+Composite (30 biomarkers)
+--------------------------------------------------------------------------------
+  Adiponectin and N-terminal pro-brain natriuretic peptide
+  Adiponectin and body mass index
+  Albumin-to-creatinine ratio and metabolic syndrome
+  Allostatic load score
+  BMI + Predicted forced expiratory volume in 1 second percentile (FEV1%)
+  BMI and sedentary mobility
+  Body mass index and leg extensor strength
+  C-reactive protein (high-sensitivity), white blood cell count, and serum albumin
+  C-reactive protein + high-density lipoprotein cholesterol
+  C-reactive protein, albumin, gamma-glutamyl transferase, and high-density lipoprotein cholesterol
+  Diabetes diagnosis
+  Elevated waist circumference + elevated triglycerides
+  Fatty liver index
+  Forced vital capacity & inflammation-sensitive proteins
+  HBP+HG+HDL
+  HBP+HG+TG+HDL
+  High-density lipoprotein and blood pressure
+  High-density lipoprotein cholesterol and total cholesterol
+  Hyperthyroidism
+  Hypothyroidism
+  Interleukin-6 and tumor necrosis factor-alpha
+  Large-vessel peripheral artery disease
+  Leptin and C-reactive protein
+  Lipid accumulation product
+  Metabolic syndrome
+  Obesity + insulin resistance
+  QRS|T angle + Left bundle branch block
+  QRS|T angle + No bundle branch block
+  QRS|T angle + Right bundle branch block
+  Testosterone and insulin-like growth factor I
+
+Computed tomography (10 biomarkers)
+--------------------------------------------------------------------------------
+  Bone density
+  Coronary artery calcification score
+  Extracoronary calcification sites
+  Pericardial adipose tissue volume
+  Renal artery calcification
+  Skeletal muscle density
+  Subcutaneous adipose tissue quality
+  Thigh intramuscular fat
+  Thoracic aorta calcification
+  Visceral adipose tissue quality
+
+Echocardiography (3 biomarkers)
+--------------------------------------------------------------------------------
+  Interventricular septum thickness
+  Left ventricular ejection fraction
+  Severe diastolic dysfunction
+
+Electrocardiography (61 biomarkers)
+--------------------------------------------------------------------------------
+  Abnormal P terminal force
+  Abnormal T-wave axis
+  Abnormal p-wave axis
+  Atrial fibrillation
+  Atrial premature complexes
+  Atrioventricular block
+  Axis deviation
+  Chronotropic index
+  Cornell voltage
+  Deep terminal negativity of P wave in V1
+  Delayed QRS transition
+  Early repolarization pattern
+  Electrocardiogram Minnesota code 7-1
+  Electrocardiogram Minnesota code 9-4-2
+  Electrocardiogram, any abnormality
+  Electrocardiogram, major abnormalities
+  Electrocardiographic changes
+  Heart rate variability
+  Heart rate variability, high frequency power, natural logarithm
+  Heart rate variability, low frequency power, natural logarithm
+  Heart rate variability, slope of the power-law regression line of
+  Heart rate variability, total power, natural logarithm
+  Heart rate variability, very low frequency power, natural logarithm
+  High R wave
+  Ischemic heart disease, electrocardiographic evidence
+  Left ventricular hypertrophy
+  Low frequency power of heart rate variability
+  Myocardial infarction
+  P wave duration
+  PR interval
+  Prior myocardial infarction
+  Prolonged QT interval
+  Q-QS
+  QRS Transition, clockwise rotation
+  QRS Transition, counterclockwise rotation
+  QRS non-dipolar voltage
+  QRS voltage, low
+  QRS|T angle
+  QT interval
+  QT prolongation
+  QTc dispersion minimum value
+  QTc interval
+  QTrr
+  RR interval, natural logarithm of the standard deviation of normal
+  RR intervals, standard deviation
+  Right bundle branch block
+  Romhilt-Estes left ventricular hypertrophy score
+  ST abnormalities
+  ST depression
+  ST-T segment changes
+  STV5 gradient
+  STV5 mean amplitude
+  T abnormality
+  T non-dipolar voltage
+  T-axis deviation
+  T-wave inversion
+  T-wave residuum
+  TV1 mean amplitude
+  TV5 mean amplitude
+  Unrecognized myocardial infarction
+  Ventricular premature beats during exercise
+
+Epigenetics (83 biomarkers)
+--------------------------------------------------------------------------------
+  CpG island methylation
+  CpG methylation score
+  CpGs methylation pattern cg05575921 and cg06126421
+  CpGs methylation pattern cg06126421
+  Extrinsic epigenetic age acceleration
+  Intrinsic epigenetic age acceleration
+  Universal epigenetic age acceleration
+  cg00292432
+  cg01065605
+  cg01093854
+  cg01310875
+  cg01514859
+  cg01723148
+  cg02330352
+  cg02772928
+  cg02898994
+  cg03402235
+  cg03490711
+  cg03576411
+  cg03623394
+  cg03967329
+  cg03976645
+  cg04373937
+  cg05376185
+  cg06281205
+  cg06765172
+  cg07161062
+  cg07457727
+  cg07735969
+  cg07922411
+  cg08529529
+  cg09544380
+  cg09693464
+  cg10916429
+  cg11308319
+  cg11808581
+  cg11950982
+  cg12379145
+  cg12484411
+  cg12844117
+  cg13009365
+  cg13665021
+  cg13735018
+  cg14403741
+  cg14575484
+  cg15505642
+  cg16054184
+  cg16096311
+  cg16197857
+  cg16248783
+  cg16781880
+  cg16989443
+  cg17835356
+  cg18120323
+  cg18533397
+  cg18741439
+  cg19174658
+  cg19662895
+  cg19733534
+  cg20220255
+  cg20585841
+  cg21158502
+  cg22927043
+  cg23015983
+  cg23324787
+  cg23515619
+  cg23524537
+  cg23608075
+  cg24197330
+  cg24259629
+  cg24319508
+  cg24737067
+  cg25468681
+  cg25649038
+  cg26078407
+  cg26106417
+  cg26160180
+  cg26318321
+  cg26989202
+  cg27224642
+  cg27257822
+  cg27601809
+  cg27635330
+
+Exercise test (10 biomarkers)
+--------------------------------------------------------------------------------
+  Cardiorespiratory fitness
+  Exercise capacity
+  Graded exercise tolerance test score
+  Heart rate recovery
+  Heart rate, rest-to-peak
+  Side step
+  Sit-ups
+  Strength
+  Vertical jump
+  Walking speed
+
+Other (21 biomarkers)
+--------------------------------------------------------------------------------
+  Abdominal aortic calcification
+  Basal metabolic rate
+  Brachial-ankle pulse wave velocity
+  Carotid/brachial pulse pressure ratio
+  Coronary heart disease
+  Cortisol
+  Diabetes mellitus, type 2
+  Expired air carbon monoxide
+  Interday rhythm stability
+  Intraday circadian fragmentation
+  Non-exercise testing for fitness score
+  Oxygen saturation
+  Pulmonary diffusing capacity for carbon monoxide
+  Pulmonary diffusing capacity for carbon monoxide, percentage of predicted
+  Pulse-wave amplitude
+  Reflection magnitude
+  Relative abdominal fat
+  Relative heart volume
+  SF-12-derived physical component summaries
+  Skeletal muscle mass
+  Steps per day
+
+Physical parameter (47 biomarkers)
+--------------------------------------------------------------------------------
+  Abdominal subcutaneous fat
+  Ambulatory heart rate
+  Ankle width
+  Arm circumference
+  Bioelectrical impedance
+  Body adiposity index
+  Body fat mass index
+  Body fat percentage
+  Body mass index
+  Body mass index squared
+  Body water mass
+  Calf circumference
+  Distance from rump to crown
+  Dual sensory impairment
+  Fat mass
+  Fat percentage
+  Fat-free mass
+  Fat-free mass index
+  Heart rate
+  Height
+  Hip circumference
+  Lean body mass
+  Lean mass index
+  Mid upper arm circumference
+  Muscle mass index
+  Obesity (BMI >= 30)
+  Pericardial fat
+  Predicted mass
+  Presenting visual acuity
+  Pulse rate
+  Resting heart rate
+  Resting heart rate, change in
+  Skinfold thickness
+  Standing height
+  Thigh circumference
+  Triceps skinfold
+  Visceral fat area
+  Visceral fat mass
+  Visual acuity
+  Waist circumference
+  Waist-to-arm ratio
+  Waist-to-calf ratio
+  Waist-to-height ratio
+  Waist-to-hip ratio
+  Waist-to-thigh ratio
+  Weight
+  Weight change
+
+Sphygmomanometry (10 biomarkers)
+--------------------------------------------------------------------------------
+  Ankle brachial pressure
+  Ankle-brachial index
+  Aortic augmentation index
+  Blood pressure
+  Mean arterial pressure
+  Orthostatic hypotension
+  Peripheral artery disease
+  Postural hypotension
+  Pulse pressure
+  Sleep-trough morning surge in systolic blood pressure
+
+Spirometry (11 biomarkers)
+--------------------------------------------------------------------------------
+  Forced expiratory volume
+  Forced expiratory volume in 1 s and forced expiratory volume in 6 s, ratio of
+  Forced expiratory volume in 1 second
+  Forced expiratory volume in 1 second divided by height
+  Forced expiratory volume in 1 second, % of predicted value
+  Forced expiratory volume in 1 second, percentage of predicted
+  Forced expiratory volume in 1 second/height^3
+  Forced vital capacity
+  Forced vital capacity, percentage of predicted
+  LMS-defined restrictive pattern
+  Peak expiratory flow
+
+Ultrasonography (13 biomarkers)
+--------------------------------------------------------------------------------
+  Bone mineral density
+  Broadband ultrasound attenuation
+  Cardiac calcification
+  Carotid artery plaque
+  Carotid intima-media thickness
+  Cerebral vasomotor reactivity
+  Ejection fraction
+  Global longitudinal speckle strain
+  Intima-media echogenicity
+  Left carotid intima-media thickening
+  Lower carotid distensibility
+  Mitral diastolic early-to-late ratio
+  QUI stiffness
+
+Urine (11 biomarkers)
+--------------------------------------------------------------------------------
+  Albumin-to-creatinine ratio
+  Albuminuria
+  Calbindin
+  Creatinine excretion
+  Kidney injury molecule-1
+  Microalbuminuria
+  Proteinuria
+  Sodium, 24-hour excreted
+  TFF-3
+  pH
+  α1-microglobulin
