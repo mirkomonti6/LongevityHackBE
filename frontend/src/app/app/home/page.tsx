@@ -9,10 +9,9 @@ import type { Adherence, Mood } from "@/lib/api-mock";
 import { useRouter } from "next/navigation";
 
 export default function HomePage() {
-  const { primaryLever, backendResponse, todayEntry, updateTodayEntry, dailyEntries } =
+  const { primaryLever, backendResponse, todayEntry, updateTodayEntry, dailyEntries, habitStatuses, habitTemplate } =
     useAppState();
   const router = useRouter();
-  const [isSavingCheckin, setIsSavingCheckin] = useState(false);
   const [isSavingMood, setIsSavingMood] = useState(false);
   const [toasts, setToasts] = useState<Array<{ id: string; message: string }>>(
     []
@@ -28,7 +27,8 @@ export default function HomePage() {
     return null;
   }
 
-  const hasSubmittedCheckinToday = todayEntry?.adherence !== null;
+  const today = new Date().toISOString().split("T")[0];
+  const todayStatus = habitStatuses.find((s) => s.date === today);
   const hasSubmittedMoodToday = todayEntry?.mood !== null;
 
   const addToast = (message: string) => {
@@ -40,13 +40,6 @@ export default function HomePage() {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
-  const handleAdherenceClick = async (value: Adherence) => {
-    if (isSavingCheckin) return;
-    setIsSavingCheckin(true);
-    await updateTodayEntry({ adherence: value });
-    addToast("Check-in saved for today ✅");
-    setIsSavingCheckin(false);
-  };
 
   const handleMoodClick = async (value: Mood) => {
     if (isSavingMood) return;
@@ -58,24 +51,26 @@ export default function HomePage() {
 
   const getStreakData = () => {
     const last10Days: Array<{ date: string; adherence: string | null }> = [];
-    const today = new Date().toISOString().split("T")[0];
 
     for (let i = 0; i < 10; i++) {
       const date = new Date();
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().split("T")[0];
-      const entry = dailyEntries.find((e) => e.date === dateStr);
+      const status = habitStatuses.find((s) => s.date === dateStr);
+      
+      const adherence = status?.status === "yes" || status?.status === "partly" ? "yes" : null;
+      
       last10Days.push({
         date: dateStr,
-        adherence: entry?.adherence || null,
+        adherence,
       });
     }
 
     const completed = last10Days.filter((e) => e.adherence === "yes").length;
-    return { days: last10Days.reverse(), completed, total: 10, today };
+    return { days: last10Days.reverse(), completed, total: 10 };
   };
 
-  const { days, completed, today } = getStreakData();
+  const { days, completed } = getStreakData();
 
   const getMoodEmoji = (mood: Mood | null) => {
     switch (mood) {
@@ -127,33 +122,49 @@ export default function HomePage() {
         </Card>
 
         <Card className="p-6 space-y-4">
-          <div className="space-y-2">
+          <div className="space-y-3">
             <h2 className="text-lg font-semibold">
-              Did you follow this habit today?
+              Today's Progress
             </h2>
-            <p className="text-sm text-muted-foreground">
-              {backendResponse?.interventionName || primaryLever.name}
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <Button
-              variant={
-                todayEntry?.adherence === "yes" ? "default" : "outline"
+            {(() => {
+              const todayStatus = habitStatuses.find((s) => s.date === today);
+              if (!todayStatus) {
+                return (
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                      Tracking data is being collected...
+                    </p>
+                  </div>
+                );
               }
-              onClick={() => handleAdherenceClick("yes")}
-              className="flex-1 h-12"
-              disabled={isSavingCheckin}
-            >
-              ✅ Yes
-            </Button>
-            <Button
-              variant={todayEntry?.adherence === "no" ? "default" : "outline"}
-              onClick={() => handleAdherenceClick("no")}
-              className="flex-1 h-12"
-              disabled={isSavingCheckin}
-            >
-              ❌ No
-            </Button>
+
+              const statusEmoji = todayStatus.status === "yes" ? "✅" : todayStatus.status === "partly" ? "⚠️" : "❌";
+              const statusText = todayStatus.status === "yes" ? "On track" : todayStatus.status === "partly" ? "Almost there" : "Needs attention";
+              const statusColor = todayStatus.status === "yes" ? "text-green-600" : todayStatus.status === "partly" ? "text-yellow-600" : "text-red-600";
+
+              return (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{statusEmoji}</span>
+                    <div>
+                      <p className={`font-semibold ${statusColor}`}>
+                        {statusText}
+                      </p>
+                      {todayStatus.reason && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {todayStatus.reason}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="pt-2 border-t">
+                    <p className="text-xs text-muted-foreground">
+                      Data automatically tracked from your connected devices
+                    </p>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </Card>
 
@@ -188,17 +199,16 @@ export default function HomePage() {
           <div className="flex gap-2">
             {days.map((entry) => {
               const isToday = entry.date === today;
-              const isCompleted = entry.adherence === "yes";
+              const status = habitStatuses.find((s) => s.date === entry.date);
+              const isCompleted = status?.status === "yes" || status?.status === "partly";
               let fillClass = "bg-muted border border-muted-foreground/20";
               let ringClass = "";
 
               if (isCompleted) {
                 fillClass = "bg-primary border-primary";
-              } else if (isToday && !hasSubmittedCheckinToday) {
+              } else if (isToday) {
                 fillClass = "bg-background border-2 border-primary";
                 ringClass = "ring-2 ring-primary/20";
-              } else if (isToday && hasSubmittedCheckinToday) {
-                fillClass = "bg-muted border border-muted-foreground/20";
               }
 
               return (

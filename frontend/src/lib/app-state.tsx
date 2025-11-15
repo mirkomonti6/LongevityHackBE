@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import type { OnboardingData } from "./onboarding-schema";
 import type { LeverResult, DailyEntry } from "./api-mock";
 import type { BackendResponse } from "./api";
@@ -10,6 +10,13 @@ import {
   fetchDailyEntries,
   getTodayEntry,
 } from "./api-mock";
+import {
+  generateMockMetrics,
+  computeHabitStatuses,
+  createHabitFromLever,
+  getTodayStatus,
+} from "./tracking-mock";
+import type { HabitDayStatus, HabitTemplate } from "./tracking-types";
 
 interface AppState {
   onboardingData: OnboardingData | null;
@@ -18,6 +25,8 @@ interface AppState {
   todayEntry: DailyEntry | null;
   isLoading: boolean;
   backendResponse: BackendResponse | null;
+  habitStatuses: HabitDayStatus[];
+  habitTemplate: HabitTemplate | null;
 }
 
 interface AppStateContextValue extends AppState {
@@ -67,16 +76,63 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       } catch {
       }
     }
-
-    refreshEntries();
   }, []);
+
+  const habitTemplate = useMemo(() => {
+    if (!primaryLever) return null;
+    return createHabitFromLever(primaryLever, backendResponse?.interventionName || null);
+  }, [primaryLever, backendResponse]);
+
+  const mockMetrics = useMemo(() => {
+    if (!primaryLever) return [];
+    return generateMockMetrics(14, primaryLever.type);
+  }, [primaryLever]);
+
+  const habitStatuses = useMemo(() => {
+    if (!habitTemplate || mockMetrics.length === 0) return [];
+    return computeHabitStatuses(habitTemplate, mockMetrics);
+  }, [habitTemplate, mockMetrics]);
 
   const refreshEntries = useCallback(async () => {
-    const entries = await fetchDailyEntries();
-    setDailyEntries(entries);
-    const today = await getTodayEntry();
-    setTodayEntry(today);
-  }, []);
+    if (!habitTemplate || habitStatuses.length === 0) {
+      const entries = await fetchDailyEntries();
+      setDailyEntries(entries);
+      const today = await getTodayEntry();
+      setTodayEntry(today);
+      return;
+    }
+
+    const todayStatus = getTodayStatus(habitStatuses);
+    const today = new Date().toISOString().split("T")[0];
+
+    const manualEntries = await fetchDailyEntries();
+    const manualTodayEntry = manualEntries.find((e) => e.date === today);
+
+    const autoEntries: DailyEntry[] = habitStatuses.map((status) => {
+      const manualEntry = manualEntries.find((e) => e.date === status.date);
+      const adherence = manualEntry?.adherence || (status.status === "yes" ? "yes" : status.status === "partly" ? "yes" : "no");
+      
+      return {
+        date: status.date,
+        adherence: adherence as "yes" | "no" | null,
+        mood: manualEntry?.mood || null,
+      };
+    });
+
+    setDailyEntries(autoEntries);
+
+    const todayEntryData: DailyEntry = {
+      date: today,
+      adherence: manualTodayEntry?.adherence || (todayStatus?.status === "yes" ? "yes" : todayStatus?.status === "partly" ? "yes" : "no"),
+      mood: manualTodayEntry?.mood || null,
+    };
+
+    setTodayEntry(todayEntryData);
+  }, [habitTemplate, habitStatuses]);
+
+  useEffect(() => {
+    refreshEntries();
+  }, [refreshEntries]);
 
   const setOnboardingData = useCallback((data: OnboardingData) => {
     setOnboardingDataState(data);
@@ -123,6 +179,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         todayEntry,
         isLoading,
         backendResponse,
+        habitStatuses,
+        habitTemplate,
         setOnboardingData,
         setPrimaryLever,
         setBackendResponse,

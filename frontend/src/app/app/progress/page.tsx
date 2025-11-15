@@ -4,12 +4,16 @@ import { useAppState } from "@/lib/app-state";
 import { Card } from "@/components/ui/card";
 
 export default function ProgressPage() {
-  const { dailyEntries, backendResponse, primaryLever } = useAppState();
+  const { dailyEntries, backendResponse, primaryLever, habitStatuses } = useAppState();
 
   const getStreakData = () => {
     const last10Days = dailyEntries.slice(0, 10);
     const completed = last10Days.filter((e) => e.adherence === "yes").length;
     return { completed, total: 10 };
+  };
+  
+  const getStatusForDate = (date: string) => {
+    return habitStatuses.find((s) => s.date === date);
   };
 
   const { completed } = getStreakData();
@@ -83,22 +87,30 @@ export default function ProgressPage() {
               No entries yet. Start tracking your progress on the Home screen.
             </Card>
           ) : (
-            dailyEntries.map((entry) => (
-              <Card key={entry.date} className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <p className="font-medium">{formatDate(entry.date)}</p>
-                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                      <span>
-                        {getAdherenceEmoji(entry.adherence)}{" "}
-                        {entry.adherence || "Not set"}
-                      </span>
-                      <span>{getMoodEmoji(entry.mood)}</span>
+            dailyEntries.map((entry) => {
+              const status = getStatusForDate(entry.date);
+              return (
+                <Card key={entry.date} className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1 flex-1">
+                      <p className="font-medium">{formatDate(entry.date)}</p>
+                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                        <span>
+                          {getAdherenceEmoji(entry.adherence)}{" "}
+                          {entry.adherence || "Not set"}
+                        </span>
+                        <span>{getMoodEmoji(entry.mood)}</span>
+                      </div>
+                      {status?.reason && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {status.reason}
+                        </p>
+                      )}
                     </div>
                   </div>
-                </div>
-              </Card>
-            ))
+                </Card>
+              );
+            })
           )}
         </div>
       </div>
