@@ -159,12 +159,12 @@ class LongevityScoreCalculator:
             # Fallback to best_study if no singles found
             return biomarker_data.get('best_study')
         
-        # Filter 2: Reasonable hazard ratios (0.3 to 3.0)
+        # Filter 2: Reasonable hazard ratios (0.3 to 4.0)
         # Extreme HRs often indicate confounding or extreme populations
         reasonable_studies = []
         for study in single_biomarker_studies:
             hr = study['hazard_ratio']
-            if 0.3 <= hr <= 3.0:
+            if 0.3 <= hr <= 4.0:
                 reasonable_studies.append(study)
         
         if not reasonable_studies:
@@ -182,22 +182,11 @@ class LongevityScoreCalculator:
         if not valid_studies:
             return biomarker_data.get('best_study')
         
-        # Filter 4: Prefer studies with range or threshold data over "direction_only"
-        # direction_only studies can't properly score extreme values
-        studies_with_ranges = []
-        for study in valid_studies:
-            opt_type = study.get('optimal_value', {}).get('type')
-            if opt_type in ['range', 'threshold']:
-                studies_with_ranges.append(study)
-        
-        # Use range-based studies if available, otherwise use all valid studies
-        selection_pool = studies_with_ranges if studies_with_ranges else valid_studies
-        
         # Select median by effect magnitude (not most extreme)
-        selection_pool.sort(key=lambda s: s['effect_magnitude'])
-        median_idx = len(selection_pool) // 2
+        valid_studies.sort(key=lambda s: s['effect_magnitude'])
+        median_idx = len(valid_studies) // 2
         
-        return selection_pool[median_idx]
+        return valid_studies[median_idx]
     
     def _calculate_survival_rates(self, study_data: Dict) -> tuple:
         """
