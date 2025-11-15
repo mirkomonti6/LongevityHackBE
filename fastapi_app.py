@@ -5,11 +5,16 @@ This module creates a FastAPI server that wraps the LangGraph application,
 allowing it to be accessed via HTTP requests.
 """
 
+import os
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional, Literal
 from langgraph_app import create_graph
 from nodes import GraphState
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Create FastAPI app instance
 app = FastAPI(
@@ -44,11 +49,38 @@ class PdfInput(BaseModel):
     data: Optional[str] = None
 
 
+class UserProfile(BaseModel):
+    """User profile model for biohacker agent."""
+    age: int
+    gender: Literal["male", "female", "other"]
+    job: str
+
+
+class BloodData(BaseModel):
+    """Blood biomarker data model - flexible dict of marker names to values."""
+    glucose: Optional[float] = None
+    hba1c: Optional[float] = None
+    ldl: Optional[float] = None
+    hdl: Optional[float] = None
+    triglycerides: Optional[float] = None
+    crp: Optional[float] = None
+    vitamin_d: Optional[float] = None
+    insulin: Optional[float] = None
+    blood_pressure_systolic: Optional[float] = None
+    blood_pressure_diastolic: Optional[float] = None
+    
+    def to_dict(self):
+        """Convert to dict, excluding None values."""
+        return {k: v for k, v in self.model_dump().items() if v is not None}
+
+
 class ApiInput(BaseModel):
     """Input model for the API request."""
-    userInput: str
+    userInput: str = ""
     pastMessages: list[Message] = []
     pdf: PdfInput = PdfInput()
+    userProfile: Optional[UserProfile] = None
+    bloodData: Optional[BloodData] = None
 
 
 class ApiOutput(BaseModel):
@@ -132,6 +164,13 @@ async def execute_graph(request: ApiRequest):
             "messages": [msg.model_dump() for msg in request.input.pastMessages],
             "pdf": request.input.pdf.model_dump()
         }
+        
+        # Add biohacker fields if provided
+        if request.input.userProfile:
+            initial_state["userProfile"] = request.input.userProfile.model_dump()
+        
+        if request.input.bloodData:
+            initial_state["bloodData"] = request.input.bloodData.to_dict()
         
         # Execute the graph
         final_state = graph_app.invoke(initial_state)

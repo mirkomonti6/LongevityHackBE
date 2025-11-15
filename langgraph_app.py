@@ -26,8 +26,8 @@ def create_graph():
     workflow = StateGraph(GraphState)
     
     # Add nodes to the graph
-    workflow.add_node("interviewNode", interviewNode)
-    workflow.add_node("guardrailsNode", guardrailsNode)
+    workflow.add_node("interviewNode", interviewNode) #MOCK
+    workflow.add_node("guardrailsNode", guardrailsNode) #MOCK
     workflow.add_node("suggestion", suggestion_node)
     workflow.add_node("critic", critic_node)
     
