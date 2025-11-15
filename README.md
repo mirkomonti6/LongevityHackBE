@@ -5,6 +5,7 @@ A LangGraph application with suggestion and critic nodes, exposed as a REST API 
 ## Project Overview
 
 This project implements a simple LangGraph workflow with two nodes:
+
 - **Suggestion Node**: Generates suggestions
 - **Critic Node**: Evaluates and critiques the suggestions
 
@@ -32,11 +33,13 @@ python3 -m venv venv
 ### 3. Activate the virtual environment
 
 **On macOS/Linux:**
+
 ```bash
 source venv/bin/activate
 ```
 
 **On Windows:**
+
 ```bash
 venv\Scripts\activate
 ```
@@ -48,6 +51,7 @@ pip install -r requirements.txt
 ```
 
 This will install:
+
 - `langgraph` - For building stateful, multi-actor applications
 - `langchain-core` - Core LangChain functionality
 - `langchain-openai` - OpenAI integration for LangChain
@@ -66,11 +70,13 @@ python langgraph_app.py
 ```
 
 This will:
+
 1. Create the LangGraph workflow
 2. Execute the graph (suggestion → critic)
 3. Display the results in the terminal
 
 **Expected Output:**
+
 ```
 Creating LangGraph...
 Initializing graph with empty state...
@@ -106,6 +112,7 @@ uvicorn fastapi_app:app --host 0.0.0.0 --port 8000
 The server will start on `http://0.0.0.0:8000`
 
 **Access the API:**
+
 - **Interactive API Documentation (Swagger UI)**: http://localhost:8000/docs
 - **Alternative API Documentation (ReDoc)**: http://localhost:8000/redoc
 - **Root endpoint**: http://localhost:8000/
@@ -118,6 +125,7 @@ The server will start on `http://0.0.0.0:8000`
 **Endpoint:** `POST /execute`
 
 **Request:**
+
 ```bash
 curl -X POST "http://localhost:8000/execute" \
   -H "Content-Type: application/json" \
@@ -125,6 +133,7 @@ curl -X POST "http://localhost:8000/execute" \
 ```
 
 **Response:**
+
 ```json
 {
   "suggestion": "Consider implementing a feature that improves user engagement through personalized recommendations.",
@@ -145,6 +154,7 @@ curl http://localhost:8000/health
 ```
 
 **Response:**
+
 ```json
 {
   "status": "healthy",
@@ -174,6 +184,7 @@ curl http://localhost:8000/
 ## Key Files
 
 - **`langgraph_app.py`**: Contains the core LangGraph implementation:
+
   - `GraphState`: State schema for the graph
   - `suggestion_node()`: Node that generates suggestions
   - `critic_node()`: Node that critiques suggestions
@@ -190,8 +201,29 @@ curl http://localhost:8000/
 ### Running Tests
 
 Currently, the project can be tested by:
+
 1. Running the standalone script: `python langgraph_app.py`
 2. Starting the FastAPI server and testing endpoints via the Swagger UI at http://localhost:8000/docs
+
+### Running Offline Evaluations
+
+Use the Deepeval harness in `evals/` to sanity-check the single-turn workflow without hitting the FastAPI API.
+
+1. Install dependencies (includes `deepeval`):
+   ```bash
+   pip install -r requirements.txt
+   ```
+2. (Optional) Override the NetMind key used for both the workflow nodes and the Deepeval judge:
+   ```bash
+   export NETMIND_API_KEY=your-netmind-key
+   ```
+   A throwaway key is already hard-coded, so you can skip this step for local smoke tests.
+3. Execute the eval harness:
+   ```bash
+   python -m evals.run_single_turn_eval
+   ```
+
+The harness loads hard-coded `GraphState` payloads from `evals/single_turn_cases.py`, runs the workflow locally, and scores each response with Deepeval's `AnswerRelevancyMetric` plus a lightweight `GEval` correctness check. Both metrics rely on the custom NetMind-backed judge defined in `evals/netmind_llm.py`.
 
 ### Environment Variables
 
@@ -208,6 +240,7 @@ Then load it in your code using `python-dotenv`.
 ### Import Errors
 
 If you encounter import errors, ensure:
+
 1. Virtual environment is activated
 2. All dependencies are installed: `pip install -r requirements.txt`
 
@@ -234,4 +267,3 @@ If you see a "Graph not initialized" error, wait a moment after starting the ser
 ## License
 
 [Add your license information here]
-

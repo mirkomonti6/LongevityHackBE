@@ -104,10 +104,12 @@ EVALUATION CRITERIA:
 5. DISCLAIMERS: Does it need medical disclaimers or professional consultation warnings?
 
 DECISION RULES:
-- APPROVE if: Safe, evidence-based, appropriate, and includes necessary disclaimers
-- REJECT if: Contraindicated, unsafe for the user, or lacks scientific basis
+- APPROVE if: Safe, generally evidence-based, appropriate for the user's condition
+- REJECT ONLY if: Clearly contraindicated, genuinely unsafe, or could cause serious harm
+- Accept enthusiastic/motivational language as long as the core intervention is safe
+- Accept minor technical inaccuracies if the overall recommendation is sound
 - If age >70 or <18, exercise extra caution
-- Always require medical consultation for prescription-level interventions
+- Require medical consultation warnings for prescription-level interventions or serious conditions
 
 TASK:
 Provide a thorough evaluation and decide whether to APPROVE or REJECT the suggestion.
@@ -124,7 +126,7 @@ Respond ONLY with valid JSON in this exact format:
         response = client.chat.completions.create(
             model="deepseek-ai/DeepSeek-V3.2-Exp",
             messages=[
-                {"role": "system", "content": "You are a medical safety expert who reviews health recommendations for safety and appropriateness. Always respond with valid JSON."},
+                {"role": "system", "content": "You are a pragmatic medical safety reviewer who balances safety with practicality. Approve evidence-based interventions even if the language is enthusiastic. Focus on genuine safety risks, not minor wording issues. Always respond with valid JSON."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.3,  # Lower temperature for more consistent safety evaluation
