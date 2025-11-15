@@ -74,18 +74,18 @@ def get_mock_smartwatch_data(user_profile: Dict) -> Dict[str, Any]:
         daily_steps = random.randint(5000, 8000)
     
     # Sleep metrics (total ~7-8 hours typical)
-    total_sleep = round(6.5 + random.uniform(0, 2), 1)
-    deep_sleep = round(total_sleep * 0.15 + random.uniform(-0.3, 0.3), 1)  # ~13-18% deep
-    rem_sleep = round(total_sleep * 0.22 + random.uniform(-0.4, 0.4), 1)   # ~20-25% REM
-    light_sleep = round(total_sleep - deep_sleep - rem_sleep, 1)
+    # total_sleep = round(6.5 + random.uniform(0, 2), 1)
+    # deep_sleep = round(total_sleep * 0.15 + random.uniform(-0.3, 0.3), 1)  # ~13-18% deep
+    # rem_sleep = round(total_sleep * 0.22 + random.uniform(-0.4, 0.4), 1)   # ~20-25% REM
+    # light_sleep = round(total_sleep - deep_sleep - rem_sleep, 1)
     
     # Ensure realistic bounds
     vo2_max = max(20, min(70, vo2_max))
     hrv = max(20, min(100, hrv))
     resting_hr = max(45, min(90, resting_hr))
-    deep_sleep = max(0.5, min(2.5, deep_sleep))
-    rem_sleep = max(0.8, min(3.0, rem_sleep))
-    light_sleep = max(3.0, light_sleep)
+    # deep_sleep = max(0.5, min(2.5, deep_sleep))
+    # rem_sleep = max(0.8, min(3.0, rem_sleep))
+    # light_sleep = max(3.0, light_sleep)
     
     return {
         "hrv": hrv,
@@ -93,10 +93,10 @@ def get_mock_smartwatch_data(user_profile: Dict) -> Dict[str, Any]:
         "resting_heart_rate": int(resting_hr),
         "active_minutes_per_day": active_minutes,
         "daily_steps_average": daily_steps,
-        "sleep_deep_hours": deep_sleep,
-        "sleep_rem_hours": rem_sleep,
-        "sleep_light_hours": light_sleep,
-        "sleep_total_hours": round(deep_sleep + rem_sleep + light_sleep, 1)
+        # "sleep_deep_hours": deep_sleep,
+        # "sleep_rem_hours": rem_sleep,
+        # "sleep_light_hours": light_sleep,
+        # "sleep_total_hours": round(deep_sleep + rem_sleep + light_sleep, 1)
     }
 
 
@@ -180,8 +180,8 @@ def identify_activity_gaps(smartwatch_data: Dict[str, Any]) -> List[Dict[str, st
     resting_hr = smartwatch_data.get("resting_heart_rate", 70)
     active_minutes = smartwatch_data.get("active_minutes_per_day", 30)
     daily_steps = smartwatch_data.get("daily_steps_average", 5000)
-    deep_sleep = smartwatch_data.get("sleep_deep_hours", 1.2)
-    rem_sleep = smartwatch_data.get("sleep_rem_hours", 1.5)
+    # deep_sleep = smartwatch_data.get("sleep_deep_hours", 1.2)
+    # rem_sleep = smartwatch_data.get("sleep_rem_hours", 1.5)
     
     # VO2 Max assessment
     if vo2_max < 30:
@@ -274,32 +274,32 @@ def identify_activity_gaps(smartwatch_data: Dict[str, Any]) -> List[Dict[str, st
         })
     
     # Deep sleep assessment
-    if deep_sleep < 1.0:
-        gaps.append({
-            "severity": "high",
-            "metric": "Deep Sleep",
-            "value": f"{deep_sleep}h",
-            "target": "1.5-2.0h",
-            "recommendation": "Insufficient deep sleep - optimize sleep hygiene and reduce stress"
-        })
-    elif deep_sleep < 1.3:
-        gaps.append({
-            "severity": "moderate",
-            "metric": "Deep Sleep",
-            "value": f"{deep_sleep}h",
-            "target": "1.5-2.0h",
-            "recommendation": "Low deep sleep - consider sleep optimization strategies"
-        })
+    # if deep_sleep < 1.0:
+    #     gaps.append({
+    #         "severity": "high",
+    #         "metric": "Deep Sleep",
+    #         "value": f"{deep_sleep}h",
+    #         "target": "1.5-2.0h",
+    #         "recommendation": "Insufficient deep sleep - optimize sleep hygiene and reduce stress"
+    #     })
+    # elif deep_sleep < 1.3:
+    #     gaps.append({
+    #         "severity": "moderate",
+    #         "metric": "Deep Sleep",
+    #         "value": f"{deep_sleep}h",
+    #         "target": "1.5-2.0h",
+    #         "recommendation": "Low deep sleep - consider sleep optimization strategies"
+    #     })
     
     # REM sleep assessment
-    if rem_sleep < 1.2:
-        gaps.append({
-            "severity": "moderate",
-            "metric": "REM Sleep",
-            "value": f"{rem_sleep}h",
-            "target": "1.8-2.5h",
-            "recommendation": "Low REM sleep - may affect cognitive function and recovery"
-        })
+    # if rem_sleep < 1.2:
+    #     gaps.append({
+    #         "severity": "moderate",
+    #         "metric": "REM Sleep",
+    #         "value": f"{rem_sleep}h",
+    #         "target": "1.8-2.5h",
+    #         "recommendation": "Low REM sleep - may affect cognitive function and recovery"
+    #     })
     
     # Sort by severity (high -> moderate -> low)
     severity_order = {"high": 0, "moderate": 1, "low": 2}
@@ -328,7 +328,7 @@ def get_smartwatch_insights_summary(smartwatch_data: Dict[str, Any]) -> str:
         f"Resting HR: {smartwatch_data['resting_heart_rate']} bpm",
         f"Daily Active Minutes: {smartwatch_data['active_minutes_per_day']} min",
         f"Daily Steps: {smartwatch_data['daily_steps_average']} steps",
-        f"Sleep: {smartwatch_data['sleep_total_hours']}h (Deep: {smartwatch_data['sleep_deep_hours']}h, REM: {smartwatch_data['sleep_rem_hours']}h)"
+        # f"Sleep: {smartwatch_data['sleep_total_hours']}h (Deep: {smartwatch_data['sleep_deep_hours']}h, REM: {smartwatch_data['sleep_rem_hours']}h)"
     ]
     
     if gaps:
@@ -358,14 +358,14 @@ def match_interventions_to_activity_gaps(gaps: List[Dict[str, str]]) -> List[str
         
         if metric == "HRV" and severity in ["high", "moderate"]:
             suggestions.append("stress_management")
-            suggestions.append("sleep_optimization")
+            # suggestions.append("sleep_optimization")
         
         if metric in ["Active Minutes", "Daily Steps"] and severity in ["high", "moderate"]:
             suggestions.append("walking_program")
             suggestions.append("general_activity")
         
-        if metric in ["Deep Sleep", "REM Sleep"]:
-            suggestions.append("sleep_optimization")
+        # if metric in ["Deep Sleep", "REM Sleep"]:
+        #     suggestions.append("sleep_optimization")
         
         if metric == "Resting Heart Rate" and severity in ["high", "moderate"]:
             suggestions.append("cardiovascular_training")

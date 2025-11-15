@@ -4,6 +4,8 @@ import re
 from typing import Any, Dict, List
 from openai import OpenAI
 import requests
+import fitz  # PyMuPDF
+from io import BytesIO
 
 NETMIND_API_KEY = "6ecc3bdc2980400a8786fd512ad487e7"
 
@@ -140,7 +142,7 @@ Rules:
     def extract_from_base64(self, base64_string: str, filename: str = "document.pdf") -> Dict[str, Any]:
         """
         Use LLM directly to parse base64-encoded PDF/image and extract structured lab data.
-        Similar to suggestion_node.py pattern - passes image directly to LLM for parsing.
+        If the input is a PDF, converts all pages to PNG before passing to LLM.
         
         Args:
             base64_string: Base64-encoded PDF/image content
@@ -149,11 +151,89 @@ Rules:
         Returns:
             Dictionary with structured lab data
         """
-        print(f"\n[PDF Parser] Parsing PDF/image from base64 using LLM (filename: {filename})...")
+        print(f"\n[PDF Parser] Parsing document from base64 (filename: {filename})...")
         print(f"[PDF Parser] Base64 data length: {len(base64_string)} characters")
-        print(f"[PDF Parser] Calling LLM to parse image and extract structured data...")
         
-        # Use LLM directly to parse the PDF/image (similar to suggestion_node.py)
+        # Decode base64 to bytes to check file type
+        try:
+            file_bytes = base64.b64decode(base64_string)
+        except Exception as e:
+            raise ValueError(f"Failed to decode base64 string: {str(e)}")
+        
+        # Check if it's a PDF by magic bytes
+        is_pdf = file_bytes.startswith(b'%PDF')
+        
+        if is_pdf:
+            print(f"[PDF Parser] Detected PDF format - converting all pages to PNG...")
+            return self._extract_from_pdf_bytes(file_bytes)
+        else:
+            print(f"[PDF Parser] Detected image format - processing directly...")
+            return self._extract_from_image_base64(base64_string)
+    
+    def _extract_from_pdf_bytes(self, pdf_bytes: bytes) -> Dict[str, Any]:
+        """
+        Convert PDF pages to PNG and extract data from each page, then merge results.
+        
+        Args:
+            pdf_bytes: Raw PDF bytes
+            
+        Returns:
+            Dictionary with merged structured lab data from all pages
+        """
+        # Open PDF with PyMuPDF
+        pdf_document = fitz.open(stream=pdf_bytes, filetype="pdf")
+        num_pages = pdf_document.page_count
+        print(f"[PDF Parser] PDF has {num_pages} page(s)")
+        
+        # Store results from each page
+        all_page_results = []
+        
+        # Process each page
+        for page_num in range(num_pages):
+            print(f"[PDF Parser] Processing page {page_num + 1}/{num_pages}...")
+            
+            page = pdf_document[page_num]
+            
+            # Render page to PNG at 150 DPI
+            # Default is 72 DPI, so zoom factor = 150/72 ≈ 2.08
+            zoom = 150 / 72
+            mat = fitz.Matrix(zoom, zoom)
+            pix = page.get_pixmap(matrix=mat)
+            
+            # Convert pixmap to PNG bytes
+            png_bytes = pix.tobytes("png")
+            
+            # Convert PNG to base64
+            png_base64 = base64.b64encode(png_bytes).decode('utf-8')
+            
+            print(f"[PDF Parser] Page {page_num + 1} converted to PNG ({len(png_base64)} base64 chars)")
+            
+            # Extract data from this PNG page
+            page_data = self._extract_from_image_base64(png_base64, page_num=page_num + 1)
+            all_page_results.append(page_data)
+        
+        pdf_document.close()
+        
+        # Merge results from all pages
+        print(f"[PDF Parser] Merging results from {num_pages} page(s)...")
+        merged_data = self._merge_page_results(all_page_results)
+        
+        return merged_data
+    
+    def _extract_from_image_base64(self, base64_string: str, page_num: int = None) -> Dict[str, Any]:
+        """
+        Extract structured data from a base64-encoded image using LLM.
+        
+        Args:
+            base64_string: Base64-encoded image (PNG, JPEG, etc.)
+            page_num: Optional page number for logging
+            
+        Returns:
+            Dictionary with structured lab data
+        """
+        page_info = f" (page {page_num})" if page_num else ""
+        print(f"[PDF Parser] Calling LLM to extract structured data{page_info}...")
+        
         # Pass the base64 image directly to the LLM using vision API format
         completion = self.client.chat.completions.create(
             model=self.model,
@@ -165,18 +245,18 @@ Rules:
                         {
                             "type": "image_url",
                             "image_url": {
-                                "url": f"data:application/pdf;base64,{base64_string}"
+                                "url": f"data:image/png;base64,{base64_string}"
                             }
                         },
                         {
                             "type": "text",
-                            "text": "Please extract all lab data from this PDF/image according to the schema provided in the system prompt. Extract all test results, patient information, dates, and any other relevant data."
+                            "text": "Please extract all lab data from this image according to the schema provided in the system prompt. Extract all test results, patient information, dates, and any other relevant data."
                         }
                     ]
                 }
             ],
             temperature=0,
-            max_tokens=2000,  # Increased for PDF/image parsing
+            max_tokens=2000,
         )
         
         content = completion.choices[0].message.content
@@ -184,12 +264,52 @@ Rules:
         
         # Print extracted data
         print("\n" + "="*80)
-        print("EXTRACTED LAB DATA:")
+        print(f"EXTRACTED LAB DATA{page_info}:")
         print("="*80)
         print(json.dumps(extracted_data, indent=2, ensure_ascii=False))
         print("="*80 + "\n")
         
         return extracted_data
+    
+    def _merge_page_results(self, page_results: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Merge extracted data from multiple pages.
+        - Use patient/specimen/physician info from first page
+        - Concatenate all tests from all pages
+        - Combine raw_text from all pages
+        
+        Args:
+            page_results: List of extracted data dictionaries, one per page
+            
+        Returns:
+            Merged dictionary with all data
+        """
+        if not page_results:
+            return {}
+        
+        if len(page_results) == 1:
+            return page_results[0]
+        
+        # Start with first page as base
+        merged = page_results[0].copy()
+        
+        # Collect all tests from all pages
+        all_tests = []
+        all_raw_text = []
+        
+        for page_data in page_results:
+            if "tests" in page_data and isinstance(page_data["tests"], list):
+                all_tests.extend(page_data["tests"])
+            if "raw_text" in page_data:
+                all_raw_text.append(page_data["raw_text"])
+        
+        # Update merged data
+        merged["tests"] = all_tests
+        merged["raw_text"] = "\n\n--- PAGE BREAK ---\n\n".join(all_raw_text)
+        
+        print(f"[PDF Parser] Merged {len(all_tests)} total tests from {len(page_results)} pages")
+        
+        return merged
 
     # ------------ helper: robust JSON parsing ------------
 
