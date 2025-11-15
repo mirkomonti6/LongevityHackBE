@@ -86,7 +86,7 @@ class ApiInput(BaseModel):
 class ApiOutput(BaseModel):
     """Output model for the API response."""
     response: str
-    finalSuggestion: bool
+    intervention_name: Optional[str] = None
 
 
 class ApiRequest(BaseModel):
@@ -140,13 +140,13 @@ async def execute_graph(request: ApiRequest):
     Execute the LangGraph workflow.
     
     This endpoint runs the complete graph (suggestion → critic) and returns
-    the final response and suggestion based on user input, messages, and PDF content.
+    the final response and intervention name based on user input, messages, and PDF content.
     
     Args:
         request: ApiRequest containing input with userInput, messages, and pdf
         
     Returns:
-        ApiResponse with output containing response and finalSuggestion
+        ApiResponse with output containing response text and intervention_name (if approved)
         
     Raises:
         HTTPException: If graph is not initialized or execution fails
@@ -175,17 +175,34 @@ async def execute_graph(request: ApiRequest):
         # Execute the graph
         final_state = graph_app.invoke(initial_state)
         
-        # Map final state to ApiResponse
-        # Use response field (critique) and finalSuggestion field from state
-        response_text = final_state.get("response") or final_state.get("critique", "No response generated")
+        # Extract suggestion and approval status
+        suggestion_dict = final_state.get("suggestion")
         final_suggestion_approved = final_state.get("finalSuggestion", False)
+        critique = final_state.get("critique", "")
         
-        response = ApiResponse(
-            output=ApiOutput(
-                response=response_text,
-                finalSuggestion=final_suggestion_approved
+        # Build response based on approval status
+        if final_suggestion_approved and suggestion_dict and isinstance(suggestion_dict, dict):
+            # Approved: Return suggestion text and intervention name
+            response_text = suggestion_dict.get("suggestion", "No suggestion generated")
+            challenge = suggestion_dict.get("challenge", {})
+            intervention_name = challenge.get("intervention_name") if challenge else None
+            
+            response = ApiResponse(
+                output=ApiOutput(
+                    response=response_text,
+                    intervention_name=intervention_name
+                )
             )
-        )
+        else:
+            # Rejected: Return critic's rejection message
+            response_text = critique or "Suggestion was not approved for safety reasons."
+            
+            response = ApiResponse(
+                output=ApiOutput(
+                    response=response_text,
+                    intervention_name=None
+                )
+            )
         
         return response
         

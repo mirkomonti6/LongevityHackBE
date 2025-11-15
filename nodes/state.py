@@ -44,6 +44,7 @@ class GraphState(TypedDict):
     # Biohacker fields
     userProfile: NotRequired[dict]  # {age: int, gender: str, job: str}
     bloodData: NotRequired[dict]  # {biomarker_name: value}
+    smartwatchData: NotRequired[dict]  # {hrv, vo2_max, resting_heart_rate, active_minutes, sleep_stages}
     selectedIntervention: NotRequired[dict]  # Intervention from database
     challenge: NotRequired[dict]  # 10-day challenge routine
     scientificReferences: NotRequired[list]  # List of references

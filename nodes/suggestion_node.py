@@ -13,78 +13,19 @@ from openai import OpenAI
 from .state import GraphState
 from .biohacker_db import get_all_interventions, get_interventions_by_biomarker
 from .longevity_calculator import identify_problematic_biomarkers
+from .smartwatch_db import (
+    get_mock_smartwatch_data, 
+    assess_fitness_level, 
+    identify_activity_gaps,
+    get_smartwatch_insights_summary,
+    match_interventions_to_activity_gaps
+)
 
 # Configure logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 NETMIND_API_KEY = "6ecc3bdc2980400a8786fd512ad487e7"
-
-def generate_10_day_challenge(intervention: Dict[str, Any], user_profile: Dict) -> Dict:
-    """
-    Generate a simple 10-day challenge based on the intervention.
-    
-    Args:
-        intervention: The selected intervention from the database
-        user_profile: User demographic information
-        
-    Returns:
-        Dict with challenge details
-    """
-    category = intervention['category']
-    name = intervention['name']
-    
-    # Simple daily tasks based on intervention type
-    if category == 'supplements':
-        daily_tasks = [f"Take {intervention['dosage']}" for _ in range(10)]
-    elif category == 'exercise':
-        if 'walking' in name.lower():
-            daily_tasks = [
-                "Walk 5,000 steps today",
-                "Walk 6,000 steps today",
-                "Walk 7,000 steps today",
-                "Walk 8,000 steps today",
-                "Walk 8,000 steps today",
-                "Walk 9,000 steps today",
-                "Walk 10,000 steps today",
-                "Walk 10,000 steps today",
-                "Walk 10,000 steps + 5 min stretching",
-                "Walk 10,000 steps + reflect on progress"
-            ]
-        elif 'hiit' in name.lower() or 'interval' in name.lower():
-            daily_tasks = [
-                "Day 1: 15 min HIIT session",
-                "Day 2: Rest/light walking",
-                "Day 3: 20 min HIIT session",
-                "Day 4: Rest/light activity",
-                "Day 5: 20 min HIIT session",
-                "Day 6: Rest/stretching",
-                "Day 7: 25 min HIIT session",
-                "Day 8: Rest/light activity",
-                "Day 9: 25 min HIIT session",
-                "Day 10: Rest and assess progress"
-            ]
-        else:
-            daily_tasks = [f"Complete {intervention['dosage']}" for _ in range(10)]
-    elif category == 'diet':
-        daily_tasks = [
-            f"Day {i+1}: Follow {name} - {intervention['dosage']}" for i in range(10)
-        ]
-    elif category == 'sleep':
-        daily_tasks = [f"Sleep {intervention['dosage']}" for _ in range(10)]
-    elif category == 'lifestyle':
-        daily_tasks = [f"{intervention['dosage']}" for _ in range(10)]
-    else:
-        daily_tasks = [f"Follow {name} protocol - Day {i+1}" for i in range(10)]
-    
-    return {
-        "intervention_name": name,
-        "duration_days": 10,
-        "daily_tasks": daily_tasks,
-        "success_criteria": intervention.get('expected_improvement', 'Complete all 10 days'),
-        "category": category
-    }
-
 
 def format_scientific_references(intervention: Dict[str, Any]) -> List[Dict]:
     """
@@ -126,6 +67,27 @@ def suggestion_node(state: GraphState) -> GraphState:
     logger.info(f"User profile: Age={user_profile.get('age')}, Gender={user_profile.get('gender')}, Job={user_profile.get('job')}")
     logger.info(f"Blood data biomarkers: {list(blood_data.keys()) if blood_data else 'None'}")
     
+    # Get or generate smartwatch data
+    smartwatch_data = state.get("smartwatchData")
+    if not smartwatch_data and user_profile:
+        logger.info("Generating mock smartwatch data based on user profile")
+        smartwatch_data = get_mock_smartwatch_data(user_profile)
+    
+    # Assess fitness and identify gaps from smartwatch data
+    fitness_assessment = None
+    activity_gaps = []
+    smartwatch_insights = None
+    
+    if smartwatch_data:
+        fitness_assessment = assess_fitness_level(smartwatch_data)
+        activity_gaps = identify_activity_gaps(smartwatch_data)
+        smartwatch_insights = get_smartwatch_insights_summary(smartwatch_data)
+        
+        logger.info(f"Smartwatch data: HRV={smartwatch_data.get('hrv')}, VO2 Max={smartwatch_data.get('vo2_max')}, " +
+                   f"RHR={smartwatch_data.get('resting_heart_rate')}, Active mins={smartwatch_data.get('active_minutes_per_day')}")
+        logger.info(f"Fitness level: {fitness_assessment['fitness_level']} ({fitness_assessment['overall_score']}/100)")
+        logger.info(f"Identified {len(activity_gaps)} activity gaps")
+    
     # Validate required data
     if not user_profile or not blood_data:
         logger.warning("Missing required data: user_profile or blood_data")
@@ -146,7 +108,7 @@ def suggestion_node(state: GraphState) -> GraphState:
     if not problematic:
         logger.info("No problematic biomarkers found - returning wellness message")
         return {
-            "suggestion": "Congratulations! All biomarkers are in excellent ranges. Continue your current health practices!",
+            "suggestion": "🎉 Wow! Your biomarkers are looking amazing! 💪 Everything's in the sweet spot! Keep doing what you're doing - you're absolutely crushing it! 🌟",
             "problematicBiomarkers": [],
             "challenge": None
         }
@@ -175,50 +137,74 @@ def suggestion_node(state: GraphState) -> GraphState:
         }
     
     # Use LLM to select best intervention and generate personalized message
-    try:
-        logger.info("Calling LLM to select best intervention...")
-        client = OpenAI(
-            base_url="https://api.netmind.ai/inference-api/openai/v1",
-            api_key=NETMIND_API_KEY
-        )
-        
-        # Prepare context for LLM
-        interventions_summary = []
-        for i, intervention in enumerate(candidate_interventions[:5]):  # Limit to top 5
-            interventions_summary.append({
-                "id": intervention['id'],
-                "name": intervention['name'],
-                "category": intervention['category'],
-                "targets": intervention['target_biomarkers'],
-                "description": intervention['description'],
-                "dosage": intervention['dosage'],
-                "expected_improvement": intervention['expected_improvement'],
-                "contraindications": intervention['contraindications'],
-                "reference": intervention['scientific_references'][0] if intervention['scientific_references'] else {}
-            })
-        
-        logger.info(f"Presenting {len(interventions_summary)} interventions to LLM")
-        
-        # Build conversation context
-        conversation_context = ""
-        if messages:
-            recent_messages = messages[-3:]
-            conversation_context = "\n".join([
-                f"{msg.get('role', 'user')}: {msg.get('content', '')}"
-                for msg in recent_messages
+    logger.info("Calling LLM to select best intervention...")
+    client = OpenAI(
+        base_url="https://api.netmind.ai/inference-api/openai/v1",
+        api_key=NETMIND_API_KEY
+    )
+    
+    # Prepare context for LLM
+    interventions_summary = []
+    for i, intervention in enumerate(candidate_interventions[:5]):  # Limit to top 5
+        interventions_summary.append({
+            "id": intervention['id'],
+            "name": intervention['name'],
+            "category": intervention['category'],
+            "targets": intervention['target_biomarkers'],
+            "description": intervention['description'],
+            "dosage": intervention['dosage'],
+            "expected_improvement": intervention['expected_improvement'],
+            "contraindications": intervention['contraindications'],
+            "reference": intervention['scientific_references'][0] if intervention['scientific_references'] else {}
+        })
+    
+    logger.info(f"Presenting {len(interventions_summary)} interventions to LLM")
+    
+    # Build conversation context
+    conversation_context = ""
+    if messages:
+        recent_messages = messages[-3:]
+        conversation_context = "\n".join([
+            f"{msg.get('role', 'user')}: {msg.get('content', '')}"
+            for msg in recent_messages
+        ])
+    
+    # Build smartwatch context for LLM
+    smartwatch_context = ""
+    if smartwatch_data and fitness_assessment:
+        gaps_summary = ""
+        if activity_gaps:
+            top_gaps = activity_gaps[:3]
+            gaps_summary = "\n".join([
+                f"- {gap['metric']}: {gap['value']} (target: {gap['target']}) - {gap['severity']} priority"
+                for gap in top_gaps
             ])
         
-        # Create LLM prompt
-        prompt = f"""You are a biohacking health optimization specialist. Analyze the user's health data and select the BEST intervention from the options provided.
+        smartwatch_context = f"""
+SMARTWATCH DATA (Recent Activity & Recovery):
+- Fitness Level: {fitness_assessment['fitness_level'].title()} ({fitness_assessment['overall_score']:.1f}/100)
+- VO2 Max: {smartwatch_data['vo2_max']} ml/kg/min (cardiovascular fitness indicator)
+- HRV: {smartwatch_data['hrv']} ms (recovery & stress indicator)
+- Resting Heart Rate: {smartwatch_data['resting_heart_rate']} bpm
+- Daily Active Minutes: {smartwatch_data['active_minutes_per_day']} min (target: 60-150 min)
+- Daily Steps: {smartwatch_data['daily_steps_average']} steps
+- Sleep: {smartwatch_data['sleep_total_hours']}h total (Deep: {smartwatch_data['sleep_deep_hours']}h, REM: {smartwatch_data['sleep_rem_hours']}h)
+
+Activity/Recovery Gaps Identified:
+{gaps_summary if gaps_summary else "No major gaps - solid baseline!"}
+"""
+    
+    # Create LLM prompt
+    prompt = f"""You're a health-savvy friend who gets excited about helping people optimize their wellbeing! 😊 Analyze the user's health data and pick the BEST intervention from the options.
 
 USER PROFILE:
 - Age: {age}
 - Gender: {gender}
 - Occupation: {job}
 
-PROBLEMATIC BIOMARKERS (priority order):
+BIOMARKERS THAT NEED SOME LOVE (priority order):
 {chr(10).join([f"- {name}: {value} (score: {score:.1f}/100, optimal range)" for name, value, score, priority in problematic[:5]])}
-
+{smartwatch_context}
 AVAILABLE INTERVENTIONS:
 {json.dumps(interventions_summary, indent=2)}
 
@@ -228,116 +214,126 @@ CONVERSATION CONTEXT:
 USER'S CURRENT CONCERN:
 {user_input if user_input else "General health optimization"}
 
-TASK:
-1. Select the SINGLE BEST intervention considering:
-   - Which biomarker issue is most critical (highest priority)
-   - User's age, gender, and lifestyle (job)
-   - Feasibility and ease of implementation
-   - Scientific evidence strength
-   - Any contraindications
+YOUR MISSION:
+1. Pick the SINGLE BEST intervention considering:
+   - Which biomarker needs the most attention (highest priority)
+   - Their current fitness level and activity patterns from smartwatch data
+   - What fits their age, gender, and lifestyle best
+   - What's actually doable and not super complicated
+   - The science backing it up
+   - Any reasons they shouldn't do it
+   - How smartwatch metrics suggest they'll benefit (e.g., low HRV → stress management, low VO2 max → cardio)
 
-2. Generate a personalized, motivating message (200-300 words) that:
-   - Addresses the user warmly and personally
-   - Explains their biomarker results and what they mean
-   - Highlights the most important biomarker to improve
-   - Recommends the selected intervention with confidence
-   - Cites the scientific research supporting it (author, year, key finding)
-   - Explains expected benefits and timeline
-   - Encourages them with a positive, actionable tone
+2. Write THREE sections:
+
+   A) REASONING (150-200 words): Explain WHY you chose this intervention over others:
+      - Reference SPECIFIC biomarker values (e.g., "Your testosterone is at 320 ng/dL...")
+      - Reference SPECIFIC smartwatch metrics with actual values (e.g., "Your HRV is 42ms, well below the 50-70ms target..." or "You're averaging only 3,500 steps/day...")
+      - Connect the dots: explain how BOTH biomarkers AND smartwatch data justify this intervention
+      - If suggesting exercise/activity: cite their VO2 max value, active minutes, or step count
+      - If suggesting stress management: reference their HRV value and what it indicates
+      - If suggesting sleep optimization: mention their deep sleep and REM hours specifically
+      - Explain how age, gender, and occupation influenced your choice
+      - Why this is the #1 priority right now
+      - Keep it friendly and conversational with emojis!
+
+   B) SUGGESTION (200-300 words): The actual recommendation like texting a friend! 📱
+      - Use emojis naturally throughout (but don't overdo it!)
+      - Keep it conversational and friendly - like "Hey!" not "Dear patient"
+      - Weave in SPECIFIC smartwatch data naturally to back up your suggestions (e.g., "Looking at your smartwatch, you're only getting 25 active minutes per day when we need 60+...")
+      - When recommending action, justify it with their actual metrics (steps, HRV, VO2 max, sleep stages, active minutes)
+      - If suggesting a sedentary person do more activity, reference their low step count or active minutes
+      - If suggesting stress management, cite their low HRV value
+      - If suggesting sleep changes, mention their deep/REM sleep hours
+      - Explain what they'll do in simple terms
+      - Share the science in a friendly way - like "So this cool study from [Author, Year] found that [key result]"
+      - Make it relatable with real-world benefits they'll actually care about
+      - Get them pumped and ready to start! 💪
+
+   C) CHALLENGE: Create a gamified 10-day challenge with:
+      - intervention_name: The intervention name
+      - duration_days: 10
+      - daily_tasks: Array of 10 strings, each a daily task with emojis and motivational messages
+        * Use progression (start easy, build up)
+        * Add milestone celebrations (Day 3, Day 5, Day 7, Day 10)
+        * Make tasks specific to the intervention type
+        * Examples: "💪 Day 1: 15 min HIIT - Beast mode activated!", "✅ Day 5: Take 500mg - 🌟 Halfway hero!"
+      - success_criteria: What success looks like (from expected_improvement)
+      - category: The intervention category
+
+Remember: Choose ONLY ONE intervention. Justify it with ALL the data (biomarkers + smartwatch + profile). Science-backed BUT make it fun! 😄
 
 Respond ONLY with valid JSON in this exact format:
 {{
     "selected_intervention_id": "the-intervention-id",
-    "personalized_message": "Your warm, scientific, motivating message here..."
+    "reasoning": "Your detailed reasoning here with emojis...",
+    "suggestion": "Your fun, friendly, science-backed recommendation here with emojis...",
+    "challenge": {{
+        "intervention_name": "Intervention Name",
+        "duration_days": 10,
+        "daily_tasks": ["Day 1: ...", "Day 2: ...", "Day 3: ...", "Day 4: ...", "Day 5: ...", "Day 6: ...", "Day 7: ...", "Day 8: ...", "Day 9: ...", "Day 10: ..."],
+        "success_criteria": "Expected improvement description",
+        "category": "category_name"
+    }}
 }}"""
 
-        response = client.chat.completions.create(
-            model="deepseek-ai/DeepSeek-V3.2-Exp",
-            messages=[
-                {"role": "system", "content": "You are a health optimization specialist who provides evidence-based, personalized biohacking recommendations. Always respond with valid JSON."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.7,
-            max_tokens=800
-        )
-        
-        logger.info("LLM response received")
-        
-        # Parse LLM response
-        llm_output = response.choices[0].message.content.strip()
-        
-        # Extract JSON from response (handle potential markdown code blocks)
-        if "```json" in llm_output:
-            llm_output = llm_output.split("```json")[1].split("```")[0].strip()
-        elif "```" in llm_output:
-            llm_output = llm_output.split("```")[1].split("```")[0].strip()
-        
-        llm_result = json.loads(llm_output)
-        
-        selected_id = llm_result.get("selected_intervention_id")
-        personalized_message = llm_result.get("personalized_message")
-        
-        logger.info(f"LLM selected intervention: {selected_id}")
-        
-        # Find the selected intervention
-        selected_intervention = None
-        for intervention in candidate_interventions:
-            if intervention['id'] == selected_id:
-                selected_intervention = intervention
-                break
-        
-        if not selected_intervention:
-            logger.warning(f"Selected intervention {selected_id} not found, using fallback")
-            selected_intervention = candidate_interventions[0]  # Fallback to first
-        
-        logger.info(f"Generating 10-day challenge for: {selected_intervention['name']}")
-        # Generate 10-day challenge
-        challenge = generate_10_day_challenge(selected_intervention, user_profile)
-        
-        # Format scientific references
-        references = format_scientific_references(selected_intervention)
-        
-        # Add challenge info to message
-        full_message = f"{personalized_message}\n\n🎯 **Your 10-Day Challenge:**\nI've created a simple 10-day routine to help you get started with {selected_intervention['name']}. Complete each day's task and track your progress!"
-        
-        logger.info("=== Suggestion Node Completed Successfully ===")
-        return {
-            "suggestion": full_message,
-            "problematicBiomarkers": problematic,
-            "selectedIntervention": selected_intervention,
-            "challenge": challenge,
-            "scientificReferences": references
-        }
-        
-    except Exception as e:
-        # Fallback if LLM fails
-        logger.error(f"LLM Error in suggestion_node: {str(e)}", exc_info=True)
-        logger.info("Using fallback suggestion generation")
-        fallback_intervention = candidate_interventions[0]
-        challenge = generate_10_day_challenge(fallback_intervention, user_profile)
-        references = format_scientific_references(fallback_intervention)
-        
-        top_biomarker = problematic[0][0]
-        logger.info(f"Fallback: recommending {fallback_intervention['name']} for {top_biomarker}")
-        
-        fallback_message = f"""Based on your blood work, your {top_biomarker} needs attention. I recommend: **{fallback_intervention['name']}**
-
-{fallback_intervention['description']}
-
-**Protocol:** {fallback_intervention['dosage']}
-
-**Expected Results:** {fallback_intervention['expected_improvement']}
-
-**Scientific Backing:** {references[0]['study'] if references else 'Multiple peer-reviewed studies'} showed significant improvements in {top_biomarker}.
-
-Let's optimize your health together! 🚀"""
-        
-        logger.info("=== Suggestion Node Completed (Fallback) ===")
-        return {
-            "suggestion": fallback_message,
-            "problematicBiomarkers": problematic,
-            "selectedIntervention": fallback_intervention,
-            "challenge": challenge,
-            "scientificReferences": references
-        }
+    response = client.chat.completions.create(
+        model="deepseek-ai/DeepSeek-V3.2-Exp",
+        messages=[
+            {"role": "system", "content": "You are a fun, friendly health enthusiast who loves sharing science-backed health tips. You're casual and conversational but always evidence-based. Use emojis naturally and make health optimization exciting! Always respond with valid JSON."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.7,
+        max_tokens=1500
+    )
+    
+    logger.info("LLM response received")
+    
+    # Parse LLM response
+    llm_output = response.choices[0].message.content.strip()
+    
+    # Extract JSON from response (handle potential markdown code blocks)
+    if "```json" in llm_output:
+        llm_output = llm_output.split("```json")[1].split("```")[0].strip()
+    elif "```" in llm_output:
+        llm_output = llm_output.split("```")[1].split("```")[0].strip()
+    
+    llm_result = json.loads(llm_output)
+    
+    selected_id = llm_result.get("selected_intervention_id")
+    reasoning = llm_result.get("reasoning")
+    suggestion = llm_result.get("suggestion")
+    challenge = llm_result.get("challenge")
+    
+    logger.info(f"LLM selected intervention: {selected_id}")
+    
+    # Find the selected intervention
+    selected_intervention = None
+    for intervention in candidate_interventions:
+        if intervention['id'] == selected_id:
+            selected_intervention = intervention
+            break
+    
+    if not selected_intervention:
+        logger.warning(f"Selected intervention {selected_id} not found, using fallback")
+        selected_intervention = candidate_interventions[0]  # Fallback to first
+    
+    # Format scientific references
+    references = format_scientific_references(selected_intervention)
+    
+    # Create structured JSON output
+    suggestion_output = {
+        "reasoning": reasoning,
+        "suggestion": suggestion,
+        "challenge": challenge
+    }
+    
+    logger.info("=== Suggestion Node Completed Successfully ===")
+    return {
+        "suggestion": suggestion_output,
+        "problematicBiomarkers": problematic,
+        "selectedIntervention": selected_intervention,
+        "scientificReferences": references,
+        "smartwatchData": smartwatch_data
+    }
 
