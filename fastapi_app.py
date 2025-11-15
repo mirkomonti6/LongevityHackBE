@@ -47,14 +47,14 @@ class PdfInput(BaseModel):
 class ApiInput(BaseModel):
     """Input model for the API request."""
     userInput: str
-    messages: list[Message] = []
+    pastMessages: list[Message] = []
     pdf: PdfInput = PdfInput()
 
 
 class ApiOutput(BaseModel):
     """Output model for the API response."""
     response: str
-    finalSuggestion: str
+    finalSuggestion: bool
 
 
 class ApiRequest(BaseModel):
@@ -129,7 +129,7 @@ async def execute_graph(request: ApiRequest):
         # Map ApiRequest.input to GraphState
         initial_state: GraphState = {
             "userInput": request.input.userInput,
-            "messages": [msg.model_dump() for msg in request.input.messages],
+            "messages": [msg.model_dump() for msg in request.input.pastMessages],
             "pdf": request.input.pdf.model_dump()
         }
         
@@ -139,12 +139,12 @@ async def execute_graph(request: ApiRequest):
         # Map final state to ApiResponse
         # Use response field (critique) and finalSuggestion field from state
         response_text = final_state.get("response") or final_state.get("critique", "No response generated")
-        final_suggestion = final_state.get("finalSuggestion") or final_state.get("suggestion", "No suggestion generated")
+        final_suggestion_approved = final_state.get("finalSuggestion", False)
         
         response = ApiResponse(
             output=ApiOutput(
                 response=response_text,
-                finalSuggestion=final_suggestion
+                finalSuggestion=final_suggestion_approved
             )
         )
         

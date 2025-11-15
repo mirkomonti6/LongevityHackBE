@@ -13,26 +13,31 @@ def critic_node(state: GraphState) -> GraphState:
     
     This node takes the current state, reads the suggestion,
     and generates a critique or evaluation of that suggestion.
+    Sets finalSuggestion as a boolean indicating approval status.
     
     Args:
         state: The current graph state (should contain a 'suggestion' field)
         
     Returns:
-        Updated state with 'critique' and 'response' fields populated
+        Updated state with 'critique', 'response', and 'finalSuggestion' fields populated
     """
     # Get the suggestion from state
     suggestion = state.get("suggestion", "")
     
-    # Generate a critique based on the suggestion
+    # Generate a critique based on the suggestion and determine approval
     if suggestion:
         critique = f"Critique: The suggestion '{suggestion}' has merit. However, consider the implementation complexity and resource requirements. It would be beneficial to validate user demand before full implementation."
+        # Set finalSuggestion to True if suggestion is approved, False otherwise
+        # For now, we'll approve suggestions that have content
+        final_suggestion_approved = True
     else:
         critique = "Critique: No suggestion found in state to evaluate."
+        final_suggestion_approved = False
     
-    # Return updated state with both critique and response
-    # (response is the output field for the API, critique is for internal use)
+    # Return updated state with critique, response, and finalSuggestion (boolean)
     return {
         "critique": critique,
-        "response": critique  # Both fields have the same value
+        "response": critique,  # Response field for the API
+        "finalSuggestion": final_suggestion_approved  # Boolean indicating approval
     }
 

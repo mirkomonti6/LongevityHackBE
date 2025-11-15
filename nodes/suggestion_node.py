@@ -58,8 +58,8 @@ def suggestion_node(state: GraphState) -> GraphState:
         suggestion = "Consider implementing a feature that improves user engagement through personalized recommendations."
     
     # Return updated state
+    # Note: finalSuggestion (boolean) will be set by the critic node
     return {
-        "suggestion": suggestion,
-        "finalSuggestion": suggestion  # Both fields have the same value
+        "suggestion": suggestion
     }
 

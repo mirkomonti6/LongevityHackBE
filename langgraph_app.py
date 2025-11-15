@@ -32,12 +32,12 @@ def create_graph():
     workflow.add_node("critic", critic_node)
     
     # Set the entry point
-    workflow.set_entry_point("suggestion")
+    workflow.set_entry_point("interviewNode")
     
-    # Define the edge from suggestion to critic
+    # Define the edges in sequence: interviewNode → guardrailsNode → suggestion → critic → END
+    workflow.add_edge("interviewNode", "guardrailsNode")
+    workflow.add_edge("guardrailsNode", "suggestion")
     workflow.add_edge("suggestion", "critic")
-    
-    # Add edge from critic to END
     workflow.add_edge("critic", END)
     
     # Compile the graph
@@ -87,4 +87,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
