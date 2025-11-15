@@ -193,6 +193,27 @@ Currently, the project can be tested by:
 1. Running the standalone script: `python langgraph_app.py`
 2. Starting the FastAPI server and testing endpoints via the Swagger UI at http://localhost:8000/docs
 
+### Running Offline Evaluations
+
+Use the Deepeval harness in `evals/` to sanity-check the single-turn workflow without hitting the FastAPI API.
+
+1. Install dependencies (includes `deepeval`):
+   ```bash
+   pip install -r requirements.txt
+   ```
+2. Export the evaluator credentials:
+   ```bash
+   export OPENAI_API_KEY=sk-your-key             # required by Deepeval metrics
+   export CONFIDENT_API_KEY=confident-key        # optional, unlocks hosted dashboards
+   ```
+   The LangGraph nodes still rely on the NetMind proxy key baked into `nodes/suggestion_node.py` and `nodes/critic_node.py`. Override `NETMIND_API_KEY` via the environment if you need to.
+3. Execute the eval harness:
+   ```bash
+   python -m evals.run_single_turn_eval
+   ```
+
+The harness loads hard-coded `GraphState` payloads from `evals/single_turn_cases.py`, runs the workflow locally, and scores each response with Deepeval's `AnswerRelevancyMetric` plus a lightweight `GEval` correctness check. Extend that file with new fixtures or swap in different metrics as the product matures.
+
 ### Environment Variables
 
 If you need to use OpenAI API keys for LLM integration, create a `.env` file:
