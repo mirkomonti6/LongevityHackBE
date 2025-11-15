@@ -8,7 +8,8 @@ allowing it to be accessed via HTTP requests.
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional, Literal
-from langgraph_app import create_graph, GraphState
+from langgraph_app import create_graph
+from nodes import GraphState
 
 # Create FastAPI app instance
 app = FastAPI(
