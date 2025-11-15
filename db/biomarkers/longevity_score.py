@@ -182,11 +182,22 @@ class LongevityScoreCalculator:
         if not valid_studies:
             return biomarker_data.get('best_study')
         
-        # Select median by effect magnitude (not most extreme)
-        valid_studies.sort(key=lambda s: s['effect_magnitude'])
-        median_idx = len(valid_studies) // 2
+        # Filter 4: Prefer studies with range or threshold data over "direction_only"
+        # direction_only studies can't properly score extreme values
+        studies_with_ranges = []
+        for study in valid_studies:
+            opt_type = study.get('optimal_value', {}).get('type')
+            if opt_type in ['range', 'threshold']:
+                studies_with_ranges.append(study)
         
-        return valid_studies[median_idx]
+        # Use range-based studies if available, otherwise use all valid studies
+        selection_pool = studies_with_ranges if studies_with_ranges else valid_studies
+        
+        # Select median by effect magnitude (not most extreme)
+        selection_pool.sort(key=lambda s: s['effect_magnitude'])
+        median_idx = len(selection_pool) // 2
+        
+        return selection_pool[median_idx]
     
     def _calculate_survival_rates(self, study_data: Dict) -> tuple:
         """

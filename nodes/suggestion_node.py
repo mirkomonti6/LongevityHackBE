@@ -43,28 +43,70 @@ def format_scientific_references(intervention: Dict[str, Any]) -> List[Dict]:
     return intervention.get('scientific_references', [])
 
 
-def map_blood_data_to_measurements(blood_data: Dict[str, float], user_profile: Dict[str, Any], client: OpenAI) -> List[BiomarkerMeasurement]:
+def map_health_data_to_measurements(blood_data: Dict[str, float], user_profile: Dict[str, Any], client: OpenAI) -> List[BiomarkerMeasurement]:
     """
-    Use LLM to map blood data to BiomarkerMeasurement objects with inferred units.
+    Use LLM to map blood and user profile data to BiomarkerMeasurement objects with inferred units.
     
     Args:
         blood_data: Dictionary of biomarker names to values
-        user_profile: User demographic data for context
+        user_profile: User demographic data and health metrics (age, gender, weight_kg, height_cm, sleep_hours_per_night, movement_days_per_week)
         client: OpenAI client for LLM calls
         
     Returns:
         List of BiomarkerMeasurement objects
     """
-    if not blood_data:
+    # Combine blood data with user profile metrics
+    all_health_data = {}
+    
+    # Add blood data
+    if blood_data:
+        all_health_data.update(blood_data)
+    
+    # Extract user profile metrics and calculate derived biomarkers
+    weight_kg = user_profile.get('weight_kg')
+    height_cm = user_profile.get('height_cm')
+    age = user_profile.get('age')
+    gender = user_profile.get('gender', '').lower()
+    sleep_hours = user_profile.get('sleep_hours_per_night')
+    movement_days = user_profile.get('movement_days_per_week')
+    
+    # Calculate BMI if weight and height are available
+    if weight_kg and height_cm:
+        height_m = height_cm / 100.0
+        bmi = weight_kg / (height_m ** 2)
+        all_health_data['BMI'] = round(bmi, 2)
+        all_health_data['Body weight'] = weight_kg
+        logger.info(f"Calculated BMI: {bmi:.2f} kg/m^2")
+        
+        # Calculate body fat percentage using Deurenberg formula
+        # Formula: (1.20 × BMI) + (0.23 × age) - (10.8 × gender_factor) - 5.4
+        # gender_factor: 1 for male, 0 for female
+        if age:
+            gender_factor = 1 if gender in ['male', 'm', 'man'] else 0
+            body_fat_pct = (1.20 * bmi) + (0.23 * age) - (10.8 * gender_factor) - 5.4
+            all_health_data['Body fat percentage'] = round(body_fat_pct, 2)
+            logger.info(f"Estimated body fat percentage: {body_fat_pct:.2f}%")
+    
+    # Add sleep duration if available
+    if sleep_hours is not None:
+        all_health_data['Sleep duration'] = sleep_hours
+        logger.info(f"Sleep duration: {sleep_hours} hours/night")
+    
+    # Add movement/exercise frequency if available
+    if movement_days is not None:
+        all_health_data['Exercise frequency'] = movement_days
+        logger.info(f"Exercise frequency: {movement_days} days/week")
+    
+    if not all_health_data:
         return []
     
-    logger.info(f"Mapping {len(blood_data)} biomarkers to database format...")
+    logger.info(f"Mapping {len(all_health_data)} health metrics to database format...")
     
     # Prepare prompt for LLM
-    biomarkers_list = [{"name": k, "value": v} for k, v in blood_data.items()]
+    biomarkers_list = [{"name": k, "value": v} for k, v in all_health_data.items()]
     
-    prompt = f"""You are a medical data specialist. Given a list of biomarker measurements, your task is to:
-1. Match each biomarker name to the most likely standard biomarker name used in medical databases
+    prompt = f"""You are a medical data specialist. Given a list of biomarker and health measurements, your task is to:
+1. Match each biomarker/metric name to the most likely standard biomarker name used in medical databases
 2. Infer the appropriate unit of measurement based on the biomarker type and value range
 
 Common biomarker units:
@@ -75,26 +117,33 @@ Common biomarker units:
 - Testosterone: ng/dL or nmol/L
 - Vitamin D: ng/mL or nmol/L
 - BMI: kg/m^2
+- Body weight: kg
+- Body fat percentage: %
 - Blood pressure: mmHg
 - Heart rate: bpm
-- Body fat: %
 - HbA1c: %
 - Creatinine: mg/dL
 - Albumin: g/dL
 - White blood cell count: cells/μL or 10^9/L
 - Platelets: cells/μL or 10^9/L
+- Sleep duration: hours (per night)
+- Exercise frequency: days/week or sessions/week
+
+SPECIAL INSTRUCTIONS for user profile metrics:
+- "Sleep duration" or "Sleep hours": Map to appropriate sleep-related biomarker in database (e.g., "Sleep duration", "Sleep hours per night")
+- "Exercise frequency" or "Movement days": Map to physical activity metrics (e.g., "Exercise frequency", "Physical activity days per week")
 
 User context:
 - Age: {user_profile.get('age', 'unknown')}
 - Gender: {user_profile.get('gender', 'unknown')}
 
-Input biomarkers:
+Input health data (blood tests + user profile metrics):
 {json.dumps(biomarkers_list, indent=2)}
 
-For each biomarker, provide:
-1. The standardized biomarker name (match to common medical terminology)
+For each measurement, provide:
+1. The standardized biomarker name (match to common medical terminology or relevant database fields)
 2. The value (as provided)
-3. The most likely unit based on the value range
+3. The most likely unit based on the value range and measurement type
 
 Respond ONLY with valid JSON in this format:
 {{
@@ -108,7 +157,7 @@ Respond ONLY with valid JSON in this format:
         response = client.chat.completions.create(
             model="deepseek-ai/DeepSeek-V3.2-Exp",
             messages=[
-                {"role": "system", "content": "You are a medical data expert who standardizes biomarker measurements. Always respond with valid JSON."},
+                {"role": "system", "content": "You are a medical data expert who standardizes biomarker and health measurements. Always respond with valid JSON."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.3,
@@ -128,14 +177,23 @@ Respond ONLY with valid JSON in this format:
         
         for item in result.get("measurements", []):
             try:
+                # Determine source based on measurement type
+                name_lower = item["name"].lower()
+                if any(term in name_lower for term in ['bmi', 'body weight', 'body fat', 'waist']):
+                    source = "user_profile"
+                elif any(term in name_lower for term in ['sleep', 'exercise', 'activity', 'movement']):
+                    source = "user_profile"
+                else:
+                    source = "blood_test"
+                
                 measurement = BiomarkerMeasurement(
                     name=item["name"],
                     value=float(item["value"]),
                     unit=item["unit"],
-                    source="blood_test"
+                    source=source
                 )
                 measurements.append(measurement)
-                logger.info(f"  Mapped: {item['name']} = {item['value']} {item['unit']}")
+                logger.info(f"  Mapped: {item['name']} = {item['value']} {item['unit']} (source: {source})")
             except (KeyError, ValueError) as e:
                 logger.warning(f"  Failed to parse measurement: {item} - {e}")
                 continue
@@ -240,8 +298,8 @@ def suggestion_node(state: GraphState) -> GraphState:
         # Initialize calculator
         calculator = LongevityScoreCalculator(database_path=db_path)
         
-        # Map blood data to measurements using LLM
-        measurements = map_blood_data_to_measurements(blood_data, user_profile, client)
+        # Map blood and user profile data to measurements using LLM
+        measurements = map_health_data_to_measurements(blood_data, user_profile, client)
         
         if measurements:
             # Calculate impacts for each biomarker
