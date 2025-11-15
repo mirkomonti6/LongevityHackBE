@@ -111,6 +111,9 @@ class ApiOutput(BaseModel):
     """Output model for the API response."""
     response: str
     intervention_name: Optional[str] = None
+    topOpportunityBiomarker: Optional[str] = None
+    potentialBonusYears: Optional[float] = None
+    challenge: Optional[dict] = None
 
 
 class ApiRequest(BaseModel):
@@ -263,6 +266,12 @@ async def execute_graph(request: ApiInput):
         final_suggestion_approved = final_state.get("finalSuggestion", False)
         critique = final_state.get("critique", "")
         
+        # Extract longevity opportunity data
+        top_opportunity_biomarker = final_state.get("topOpportunityBiomarker")
+        potential_bonus_years = final_state.get("potentialBonusYears")
+        challenge = final_state.get("challenge", {})
+        intervention_name = challenge.get("intervention_name") if challenge else None
+        
         # Build response based on approval status
         if final_suggestion_approved and suggestion_dict and isinstance(suggestion_dict, dict):
             # Approved: Return suggestion text and intervention name
@@ -273,7 +282,10 @@ async def execute_graph(request: ApiInput):
             response = ApiResponse(
                 output=ApiOutput(
                     response=response_text,
-                    intervention_name=intervention_name
+                    intervention_name=intervention_name,
+                    topOpportunityBiomarker=top_opportunity_biomarker,
+                    potentialBonusYears=potential_bonus_years,
+                    challenge=challenge
                 )
             )
         else:
@@ -283,7 +295,9 @@ async def execute_graph(request: ApiInput):
             response = ApiResponse(
                 output=ApiOutput(
                     response=response_text,
-                    intervention_name=None
+                    intervention_name=None,
+                    topOpportunityBiomarker=top_opportunity_biomarker,
+                    potentialBonusYears=potential_bonus_years
                 )
             )
         

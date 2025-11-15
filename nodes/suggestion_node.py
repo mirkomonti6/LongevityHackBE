@@ -166,6 +166,14 @@ def suggestion_node(state: GraphState) -> GraphState:
     """
     logger.info("=== Suggestion Node Started ===")
     
+    # Check for retry/feedback from critic
+    critique_feedback = state.get("critiqueFeedback")
+    retry_count = state.get("retryCount", 0)
+    
+    if critique_feedback:
+        logger.info(f"=== RETRY ATTEMPT {retry_count} - Processing critique feedback ===")
+        logger.info(f"Previous rejection reason: {critique_feedback}")
+    
     # Extract data from state
     user_profile = state.get("userProfile", {})
     blood_data = state.get("bloodData", {})
@@ -393,9 +401,26 @@ Activity/Recovery Gaps Identified:
 - This is THE #1 opportunity to maximize lifespan! Optimizing this biomarker alone could add {top_opportunity['bonus_years']} years!
 """
     
+    # Build retry/feedback context if this is a retry
+    retry_context = ""
+    if critique_feedback:
+        retry_context = f"""
+⚠️ PREVIOUS ATTEMPT WAS REJECTED BY SAFETY REVIEW (Attempt {retry_count}):
+{critique_feedback}
+
+CRITICAL INSTRUCTIONS FOR THIS RETRY:
+- You MUST select a DIFFERENT intervention than the previous attempt
+- Address ALL safety concerns and recommendations mentioned above
+- If age-related concerns were raised, choose age-appropriate interventions
+- If contraindications were mentioned, avoid interventions with similar contraindications
+- If dosage/timing concerns were raised, adjust accordingly
+- Do NOT repeat the same recommendation that was rejected
+"""
+        logger.info("Added retry context to LLM prompt")
+    
     # Create LLM prompt
     prompt = f"""You're a health-savvy friend who gets excited about helping people optimize their wellbeing! 😊 Analyze the user's health data and pick the BEST intervention from the options.
-
+{retry_context}
 USER PROFILE:
 - Age: {age}
 - Gender: {gender}
@@ -470,6 +495,8 @@ Respond ONLY with valid JSON in this exact format:
     "selected_intervention_id": "the-intervention-id",
     "reasoning": "Your detailed reasoning here with emojis...",
     "suggestion": "Your fun, friendly, science-backed recommendation here with emojis...",
+    "biomarker": "The primary biomarker name this intervention targets",
+    "bonus_years": 6.5,
     "challenge": {{
         "intervention_name": "Intervention Name",
         "duration_days": 10,
@@ -477,7 +504,9 @@ Respond ONLY with valid JSON in this exact format:
         "success_criteria": "Expected improvement description",
         "category": "category_name"
     }}
-}}"""
+}}
+
+IMPORTANT: bonus_years must be a NUMBER (e.g., 6.5), NOT a string. Use the bonus years from the TOP LONGEVITY OPPORTUNITY if provided above."""
 
     response = client.chat.completions.create(
         model="deepseek-ai/DeepSeek-V3.2-Exp",
@@ -506,8 +535,20 @@ Respond ONLY with valid JSON in this exact format:
     reasoning = llm_result.get("reasoning")
     suggestion = llm_result.get("suggestion")
     challenge = llm_result.get("challenge")
+    biomarker = llm_result.get("biomarker")
+    bonus_years_raw = llm_result.get("bonus_years")
+    
+    # Convert bonus_years to float if it's a string (e.g., "6" -> 6.0)
+    bonus_years = None
+    if bonus_years_raw is not None:
+        try:
+            bonus_years = float(bonus_years_raw)
+        except (ValueError, TypeError):
+            logger.warning(f"Could not convert bonus_years to float: {bonus_years_raw}")
+            bonus_years = None
     
     logger.info(f"LLM selected intervention: {selected_id}")
+    logger.info(f"LLM identified top biomarker: {biomarker} with potential bonus years: {bonus_years}")
     
     # Find the selected intervention
     selected_intervention = None
@@ -531,11 +572,22 @@ Respond ONLY with valid JSON in this exact format:
     }
     
     logger.info("=== Suggestion Node Completed Successfully ===")
-    return {
+    
+    result = {
         "suggestion": suggestion_output,
         "problematicBiomarkers": problematic,
         "selectedIntervention": selected_intervention,
         "scientificReferences": references,
-        "smartwatchData": smartwatch_data
+        "smartwatchData": smartwatch_data,
+        "topOpportunityBiomarker": biomarker,
+        "potentialBonusYears": bonus_years,
+        "challenge": challenge
     }
+    
+    # Clear critique feedback after processing (to avoid confusion in next iteration)
+    if critique_feedback:
+        result["critiqueFeedback"] = None
+        logger.info("Cleared critique feedback from state")
+    
+    return result
 

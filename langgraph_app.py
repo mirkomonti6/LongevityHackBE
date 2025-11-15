@@ -15,6 +15,30 @@ from nodes import (
 )
 
 
+def should_retry(state: GraphState) -> str:
+    """
+    Decide if we should retry suggestion or end based on critic's decision.
+    
+    Args:
+        state: Current graph state with finalSuggestion and retryCount
+        
+    Returns:
+        "retry" if rejected and retries < 2, otherwise "end"
+    """
+    final_approved = state.get("finalSuggestion", False)
+    retry_count = state.get("retryCount", 0)
+    
+    if final_approved:
+        # Approved - end immediately
+        return "end"
+    elif retry_count < 2:
+        # Rejected but still have retries left (max 2 retries = 3 total attempts)
+        return "retry"
+    else:
+        # Max retries reached - end with rejection
+        return "end"
+
+
 def create_graph():
     """
     Creates and compiles the LangGraph with all nodes.
@@ -34,11 +58,20 @@ def create_graph():
     # Set the entry point
     workflow.set_entry_point("interviewNode")
     
-    # Define the edges in sequence: interviewNode → guardrailsNode → suggestion → critic → END
+    # Define the edges in sequence: interviewNode → guardrailsNode → suggestion → critic
     workflow.add_edge("interviewNode", "guardrailsNode")
     workflow.add_edge("guardrailsNode", "suggestion")
     workflow.add_edge("suggestion", "critic")
-    workflow.add_edge("critic", END)
+    
+    # Add conditional routing from critic: retry suggestion if rejected (max 2 retries), otherwise end
+    workflow.add_conditional_edges(
+        "critic",
+        should_retry,
+        {
+            "retry": "suggestion",  # Loop back to suggestion for retry
+            "end": END              # End the graph
+        }
+    )
     
     # Compile the graph
     app = workflow.compile()
