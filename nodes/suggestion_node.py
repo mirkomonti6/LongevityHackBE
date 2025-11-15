@@ -20,6 +20,9 @@ from .smartwatch_db import (
     get_smartwatch_insights_summary,
     match_interventions_to_activity_gaps
 )
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from db.biomarkers.longevity_score import LongevityScoreCalculator, BiomarkerMeasurement
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -40,6 +43,111 @@ def format_scientific_references(intervention: Dict[str, Any]) -> List[Dict]:
     return intervention.get('scientific_references', [])
 
 
+def map_blood_data_to_measurements(blood_data: Dict[str, float], user_profile: Dict[str, Any], client: OpenAI) -> List[BiomarkerMeasurement]:
+    """
+    Use LLM to map blood data to BiomarkerMeasurement objects with inferred units.
+    
+    Args:
+        blood_data: Dictionary of biomarker names to values
+        user_profile: User demographic data for context
+        client: OpenAI client for LLM calls
+        
+    Returns:
+        List of BiomarkerMeasurement objects
+    """
+    if not blood_data:
+        return []
+    
+    logger.info(f"Mapping {len(blood_data)} biomarkers to database format...")
+    
+    # Prepare prompt for LLM
+    biomarkers_list = [{"name": k, "value": v} for k, v in blood_data.items()]
+    
+    prompt = f"""You are a medical data specialist. Given a list of biomarker measurements, your task is to:
+1. Match each biomarker name to the most likely standard biomarker name used in medical databases
+2. Infer the appropriate unit of measurement based on the biomarker type and value range
+
+Common biomarker units:
+- Cholesterol, LDL, HDL, Triglycerides: mg/dL or mmol/L
+- Glucose: mg/dL or mmol/L
+- Hemoglobin: g/dL
+- C-reactive protein (CRP): mg/L
+- Testosterone: ng/dL or nmol/L
+- Vitamin D: ng/mL or nmol/L
+- BMI: kg/m^2
+- Blood pressure: mmHg
+- Heart rate: bpm
+- Body fat: %
+- HbA1c: %
+- Creatinine: mg/dL
+- Albumin: g/dL
+- White blood cell count: cells/μL or 10^9/L
+- Platelets: cells/μL or 10^9/L
+
+User context:
+- Age: {user_profile.get('age', 'unknown')}
+- Gender: {user_profile.get('gender', 'unknown')}
+
+Input biomarkers:
+{json.dumps(biomarkers_list, indent=2)}
+
+For each biomarker, provide:
+1. The standardized biomarker name (match to common medical terminology)
+2. The value (as provided)
+3. The most likely unit based on the value range
+
+Respond ONLY with valid JSON in this format:
+{{
+    "measurements": [
+        {{"name": "standardized_name", "value": numeric_value, "unit": "appropriate_unit"}},
+        ...
+    ]
+}}"""
+
+    try:
+        response = client.chat.completions.create(
+            model="deepseek-ai/DeepSeek-V3.2-Exp",
+            messages=[
+                {"role": "system", "content": "You are a medical data expert who standardizes biomarker measurements. Always respond with valid JSON."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.3,
+            max_tokens=2000
+        )
+        
+        llm_output = response.choices[0].message.content.strip()
+        
+        # Extract JSON from response (handle potential markdown code blocks)
+        if "```json" in llm_output:
+            llm_output = llm_output.split("```json")[1].split("```")[0].strip()
+        elif "```" in llm_output:
+            llm_output = llm_output.split("```")[1].split("```")[0].strip()
+        
+        result = json.loads(llm_output)
+        measurements = []
+        
+        for item in result.get("measurements", []):
+            try:
+                measurement = BiomarkerMeasurement(
+                    name=item["name"],
+                    value=float(item["value"]),
+                    unit=item["unit"],
+                    source="blood_test"
+                )
+                measurements.append(measurement)
+                logger.info(f"  Mapped: {item['name']} = {item['value']} {item['unit']}")
+            except (KeyError, ValueError) as e:
+                logger.warning(f"  Failed to parse measurement: {item} - {e}")
+                continue
+        
+        logger.info(f"Successfully mapped {len(measurements)} biomarkers")
+        return measurements
+        
+    except Exception as e:
+        logger.error(f"Failed to map blood data with LLM: {e}")
+        return []
+
+
 def suggestion_node(state: GraphState) -> GraphState:
     """
     Biohacker agent that analyzes health data and generates personalized recommendations.
@@ -57,6 +165,14 @@ def suggestion_node(state: GraphState) -> GraphState:
         Updated state with suggestion, challenge, and references
     """
     logger.info("=== Suggestion Node Started ===")
+    
+    # Check for retry/feedback from critic
+    critique_feedback = state.get("critiqueFeedback")
+    retry_count = state.get("retryCount", 0)
+    
+    if critique_feedback:
+        logger.info(f"=== RETRY ATTEMPT {retry_count} - Processing critique feedback ===")
+        logger.info(f"Previous rejection reason: {critique_feedback}")
     
     # Extract data from state
     user_profile = state.get("userProfile", {})
@@ -100,6 +216,88 @@ def suggestion_node(state: GraphState) -> GraphState:
     gender = user_profile.get("gender", "unknown")
     job = user_profile.get("job", "unknown")
     
+    # ============================================================================
+    # LONGEVITY SCORE CALCULATION
+    # ============================================================================
+    
+    # Initialize OpenAI client for LLM calls (needed for mapping and suggestions)
+    client = OpenAI(
+        base_url="https://api.netmind.ai/inference-api/openai/v1",
+        api_key=NETMIND_API_KEY
+    )
+    
+    # Calculate longevity score and identify top opportunity
+    top_opportunity = None
+    longevity_overall = None
+    
+    try:
+        # Get the database path relative to this file
+        current_dir = os.path.dirname(__file__)
+        db_path = os.path.join(current_dir, "..", "db", "biomarkers", "data", "biomarkers_database.json")
+        
+        logger.info("=== Longevity Score Calculation Started ===")
+        
+        # Initialize calculator
+        calculator = LongevityScoreCalculator(database_path=db_path)
+        
+        # Map blood data to measurements using LLM
+        measurements = map_blood_data_to_measurements(blood_data, user_profile, client)
+        
+        if measurements:
+            # Calculate impacts for each biomarker
+            impacts = []
+            for measurement in measurements:
+                impact = calculator.calculate_biomarker_impact(measurement, age)
+                if impact:
+                    impacts.append(impact)
+            
+            logger.info(f"Calculated impacts for {len(impacts)} biomarkers")
+            
+            # Calculate overall longevity score
+            if impacts:
+                longevity_overall = calculator.calculate_overall_score(impacts, age)
+                top_opportunity = longevity_overall.get("top_opportunity")
+                
+                # Log overall score
+                logger.info("="*60)
+                logger.info("🌟 LONGEVITY SCORE RESULTS 🌟")
+                logger.info("="*60)
+                logger.info(f"Overall Score: {longevity_overall['overall_score']}/100")
+                logger.info(f"Score Level: {longevity_overall['score_level']}")
+                logger.info(f"Optimized Biomarkers: {longevity_overall['optimized_count']}")
+                logger.info(f"Improvement Opportunities: {longevity_overall['opportunities_count']}")
+                logger.info(f"Total Bonus Years Available: +{longevity_overall['total_bonus_years']} years")
+                
+                # Log top opportunity
+                if top_opportunity:
+                    logger.info("="*60)
+                    logger.info("🚀 #1 OPPORTUNITY TO LEVEL UP 🚀")
+                    logger.info("="*60)
+                    logger.info(f"Biomarker: {top_opportunity['biomarker']}")
+                    logger.info(f"Current Score: {top_opportunity['current_score']}/100")
+                    logger.info(f"Your Value: {top_opportunity['your_value']}")
+                    logger.info(f"Target Range: {top_opportunity['target']}")
+                    logger.info(f"💎 POTENTIAL GAIN: +{top_opportunity['bonus_years']} BONUS YEARS")
+                    logger.info(f"This is your biggest opportunity! Optimizing this biomarker")
+                    logger.info(f"alone could add {top_opportunity['bonus_years']} years to your life!")
+                    logger.info("="*60)
+                else:
+                    logger.info("🎉 All biomarkers are optimal! No improvement opportunities.")
+                    logger.info("="*60)
+        else:
+            logger.warning("No measurements could be mapped from blood data")
+            
+    except FileNotFoundError:
+        logger.error(f"Biomarkers database not found at path: {db_path}")
+    except Exception as e:
+        logger.error(f"Error during longevity score calculation: {e}")
+    
+    logger.info("=== Longevity Score Calculation Completed ===\n")
+    
+    # ============================================================================
+    # END LONGEVITY SCORE CALCULATION
+    # ============================================================================
+    
     # Identify problematic biomarkers
     problematic = identify_problematic_biomarkers(blood_data, threshold=80)
     logger.info(f"Identified {len(problematic)} problematic biomarkers")
@@ -138,10 +336,7 @@ def suggestion_node(state: GraphState) -> GraphState:
     
     # Use LLM to select best intervention and generate personalized message
     logger.info("Calling LLM to select best intervention...")
-    client = OpenAI(
-        base_url="https://api.netmind.ai/inference-api/openai/v1",
-        api_key=NETMIND_API_KEY
-    )
+    # Note: client already initialized earlier for longevity score calculation
     
     # Prepare context for LLM
     interventions_summary = []
@@ -193,14 +388,44 @@ Activity/Recovery Gaps Identified:
 {gaps_summary if gaps_summary else "No major gaps - solid baseline!"}
 """
     
+    # Build longevity score context
+    longevity_context = ""
+    if top_opportunity:
+        longevity_context = f"""
+🎯 TOP LONGEVITY OPPORTUNITY (Backed by Science):
+- Biomarker: {top_opportunity['biomarker']}
+- Current Score: {top_opportunity['current_score']}/100
+- Your Value: {top_opportunity['your_value']}
+- Target Range: {top_opportunity['target']}
+- 💎 POTENTIAL GAIN: +{top_opportunity['bonus_years']} BONUS YEARS
+- This is THE #1 opportunity to maximize lifespan! Optimizing this biomarker alone could add {top_opportunity['bonus_years']} years!
+"""
+    
+    # Build retry/feedback context if this is a retry
+    retry_context = ""
+    if critique_feedback:
+        retry_context = f"""
+⚠️ PREVIOUS ATTEMPT WAS REJECTED BY SAFETY REVIEW (Attempt {retry_count}):
+{critique_feedback}
+
+CRITICAL INSTRUCTIONS FOR THIS RETRY:
+- You MUST select a DIFFERENT intervention than the previous attempt
+- Address ALL safety concerns and recommendations mentioned above
+- If age-related concerns were raised, choose age-appropriate interventions
+- If contraindications were mentioned, avoid interventions with similar contraindications
+- If dosage/timing concerns were raised, adjust accordingly
+- Do NOT repeat the same recommendation that was rejected
+"""
+        logger.info("Added retry context to LLM prompt")
+    
     # Create LLM prompt
     prompt = f"""You're a health-savvy friend who gets excited about helping people optimize their wellbeing! 😊 Analyze the user's health data and pick the BEST intervention from the options.
-
+{retry_context}
 USER PROFILE:
 - Age: {age}
 - Gender: {gender}
 - Occupation: {job}
-
+{longevity_context}
 BIOMARKERS THAT NEED SOME LOVE (priority order):
 {chr(10).join([f"- {name}: {value} (score: {score:.1f}/100, optimal range)" for name, value, score, priority in problematic[:5]])}
 {smartwatch_context}
@@ -215,6 +440,7 @@ USER'S CURRENT CONCERN:
 
 YOUR MISSION:
 1. Pick the SINGLE BEST intervention considering:
+   - **HIGHEST PRIORITY**: The TOP LONGEVITY OPPORTUNITY if provided (focus on the biomarker with the biggest potential bonus years!)
    - Which biomarker needs the most attention (highest priority)
    - Their current fitness level and activity patterns from smartwatch data
    - What fits their age, gender, and lifestyle best
@@ -226,6 +452,7 @@ YOUR MISSION:
 2. Write THREE sections:
 
    A) REASONING (150-200 words): Explain WHY you chose this intervention over others:
+      - **IF TOP LONGEVITY OPPORTUNITY IS PROVIDED**: Lead with this! Mention the specific bonus years they could gain (e.g., "Your Cholesterol is your #1 opportunity - optimizing it could add 6 bonus years to your life!")
       - Reference SPECIFIC biomarker values (e.g., "Your testosterone is at 320 ng/dL...")
       - Reference SPECIFIC smartwatch metrics with actual values (e.g., "Your HRV is 42ms, well below the 50-70ms target..." or "You're averaging only 3,500 steps/day...")
       - Connect the dots: explain how BOTH biomarkers AND smartwatch data justify this intervention
@@ -239,6 +466,7 @@ YOUR MISSION:
    B) SUGGESTION (200-300 words): The actual recommendation like texting a friend! 📱
       - Use emojis naturally throughout (but don't overdo it!)
       - Keep it conversational and friendly - like "Hey!" not "Dear patient"
+      - **IF TOP LONGEVITY OPPORTUNITY**: Mention the exciting potential bonus years gain to motivate them! (e.g., "This could literally add 6 years to your life! 🎉")
       - Weave in SPECIFIC smartwatch data naturally to back up your suggestions (e.g., "Looking at your smartwatch, you're only getting 25 active minutes per day when we need 60+...")
       - When recommending action, justify it with their actual metrics (steps, HRV, VO2 max, active minutes)
       - If suggesting a sedentary person do more activity, reference their low step count or active minutes
@@ -267,6 +495,8 @@ Respond ONLY with valid JSON in this exact format:
     "selected_intervention_id": "the-intervention-id",
     "reasoning": "Your detailed reasoning here with emojis...",
     "suggestion": "Your fun, friendly, science-backed recommendation here with emojis...",
+    "biomarker": "The primary biomarker name this intervention targets",
+    "bonus_years": 6.5,
     "challenge": {{
         "intervention_name": "Intervention Name",
         "duration_days": 10,
@@ -274,7 +504,9 @@ Respond ONLY with valid JSON in this exact format:
         "success_criteria": "Expected improvement description",
         "category": "category_name"
     }}
-}}"""
+}}
+
+IMPORTANT: bonus_years must be a NUMBER (e.g., 6.5), NOT a string. Use the bonus years from the TOP LONGEVITY OPPORTUNITY if provided above."""
 
     response = client.chat.completions.create(
         model="deepseek-ai/DeepSeek-V3.2-Exp",
@@ -303,8 +535,20 @@ Respond ONLY with valid JSON in this exact format:
     reasoning = llm_result.get("reasoning")
     suggestion = llm_result.get("suggestion")
     challenge = llm_result.get("challenge")
+    biomarker = llm_result.get("biomarker")
+    bonus_years_raw = llm_result.get("bonus_years")
+    
+    # Convert bonus_years to float if it's a string (e.g., "6" -> 6.0)
+    bonus_years = None
+    if bonus_years_raw is not None:
+        try:
+            bonus_years = float(bonus_years_raw)
+        except (ValueError, TypeError):
+            logger.warning(f"Could not convert bonus_years to float: {bonus_years_raw}")
+            bonus_years = None
     
     logger.info(f"LLM selected intervention: {selected_id}")
+    logger.info(f"LLM identified top biomarker: {biomarker} with potential bonus years: {bonus_years}")
     
     # Find the selected intervention
     selected_intervention = None
@@ -328,11 +572,22 @@ Respond ONLY with valid JSON in this exact format:
     }
     
     logger.info("=== Suggestion Node Completed Successfully ===")
-    return {
+    
+    result = {
         "suggestion": suggestion_output,
         "problematicBiomarkers": problematic,
         "selectedIntervention": selected_intervention,
         "scientificReferences": references,
-        "smartwatchData": smartwatch_data
+        "smartwatchData": smartwatch_data,
+        "topOpportunityBiomarker": biomarker,
+        "potentialBonusYears": bonus_years,
+        "challenge": challenge
     }
+    
+    # Clear critique feedback after processing (to avoid confusion in next iteration)
+    if critique_feedback:
+        result["critiqueFeedback"] = None
+        logger.info("Cleared critique feedback from state")
+    
+    return result
 

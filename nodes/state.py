@@ -49,4 +49,10 @@ class GraphState(TypedDict):
     challenge: NotRequired[dict]  # 10-day challenge routine
     scientificReferences: NotRequired[list]  # List of references
     problematicBiomarkers: NotRequired[list]  # Markers needing attention
+    topOpportunityBiomarker: NotRequired[str]  # Top biomarker to optimize (from LLM)
+    potentialBonusYears: NotRequired[float]  # Potential bonus years from optimizing top biomarker
+    
+    # Retry mechanism fields
+    retryCount: NotRequired[int]  # Number of retries attempted (0-2)
+    critiqueFeedback: NotRequired[str]  # Critique details to pass back to suggestion node
 

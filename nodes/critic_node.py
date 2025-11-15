@@ -36,6 +36,10 @@ def critic_node(state: GraphState) -> GraphState:
     """
     logger.info("=== Critic Node Started ===")
     
+    # Initialize or increment retry counter
+    retry_count = state.get("retryCount", 0)
+    logger.info(f"Current retry count: {retry_count}")
+    
     # Extract data from state
     suggestion = state.get("suggestion", "")
     user_profile = state.get("userProfile", {})
@@ -154,6 +158,33 @@ Respond ONLY with valid JSON in this exact format:
         # Determine approval
         final_suggestion_approved = (decision == "APPROVE")
         
+        # Handle retry logic for rejections
+        updated_retry_count = retry_count
+        critique_feedback = None
+        
+        if not final_suggestion_approved:
+            # Increment retry count
+            updated_retry_count = retry_count + 1
+            logger.info(f"Suggestion rejected. Incrementing retry count to {updated_retry_count}")
+            
+            # Build detailed feedback for suggestion node
+            feedback_parts = [
+                f"Decision: {decision}",
+                f"Reasoning: {reasoning}"
+            ]
+            
+            if safety_concerns:
+                feedback_parts.append(f"Safety Concerns: {', '.join(safety_concerns)}")
+            
+            if recommendations:
+                feedback_parts.append(f"Recommendations: {', '.join(recommendations)}")
+            
+            if requires_medical:
+                feedback_parts.append("Note: Medical consultation required")
+            
+            critique_feedback = "\n".join(feedback_parts)
+            logger.info(f"Critique feedback prepared for retry")
+        
         # Build critique message
         critique_parts = [f"**Safety Review:** {reasoning}"]
         
@@ -183,11 +214,19 @@ Respond ONLY with valid JSON in this exact format:
             final_response = f"{critique}\n\n*Original suggestion was not approved for safety reasons.*"
         
         logger.info(f"=== Critic Node Completed: {'APPROVED' if final_suggestion_approved else 'REJECTED'} ===")
-        return {
+        
+        result = {
             "critique": critique,
             "response": final_response,
-            "finalSuggestion": final_suggestion_approved
+            "finalSuggestion": final_suggestion_approved,
+            "retryCount": updated_retry_count
         }
+        
+        # Add critique feedback if rejected (for retry)
+        if critique_feedback:
+            result["critiqueFeedback"] = critique_feedback
+        
+        return result
         
     except Exception as e:
         # Fallback if LLM fails - default to cautious approval with warnings
@@ -211,9 +250,24 @@ Respond ONLY with valid JSON in this exact format:
             fallback_response = f"{suggestion}\n\n{fallback_critique}{disclaimer}"
         
         logger.info(f"=== Critic Node Completed (Fallback): {'APPROVED' if fallback_approved else 'REJECTED'} ===")
-        return {
+        
+        # Handle retry logic in fallback too
+        updated_retry_count = retry_count
+        critique_feedback = None
+        
+        if not fallback_approved:
+            updated_retry_count = retry_count + 1
+            critique_feedback = f"Decision: REJECT (Fallback)\nReasoning: {fallback_critique}"
+        
+        result = {
             "critique": fallback_critique,
             "response": fallback_response,
-            "finalSuggestion": fallback_approved
+            "finalSuggestion": fallback_approved,
+            "retryCount": updated_retry_count
         }
+        
+        if critique_feedback:
+            result["critiqueFeedback"] = critique_feedback
+        
+        return result
 

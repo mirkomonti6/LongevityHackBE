@@ -1,0 +1,482 @@
+Total unique biomarkers: 475
+
+====================================================================================================
+Biomarker names with statistics (sorted by rank):
+====================================================================================================
+Rank     Studies    Category                  Biomarker Name
+----------------------------------------------------------------------------------------------------
+1        0          Physical parameter        Predicted mass
+2        0          Electrocardiography       Atrioventricular block
+3        0          Physical parameter        Fat-free mass
+4        0          Computed tomography       Coronary artery calcification score
+5        0          Physical parameter        Body water mass
+6        0          Urine                     Microalbuminuria
+7        0          Physical parameter        Body mass index
+8        0          Physical parameter        Pulse rate
+9        0          Other                     Basal metabolic rate
+10       0          Blood                     Apolipoprotein A-1
+11       0          Blood                     Alanine transaminase
+12       0          Composite                 C-reactive protein, albumin, gamma-glutamyl transferase, and high-density lipoprotein cholesterol
+13       0          Blood                     Estimated glomerular filtration rate
+14       0          Epigenetics               CpG methylation score
+15       0          Physical parameter        Bioelectrical impedance
+16       0          Other                     Brachial-ankle pulse wave velocity
+17       0          Other                     Skeletal muscle mass
+18       0          Exercise test             Exercise capacity
+19       0          Blood                     Hemoglobin
+20       0          Composite                 Adiponectin and body mass index
+21       0          Echocardiography          Left ventricular ejection fraction
+22       0          Blood                     IgG
+23       0          Blood                     Red blood cell count
+24       0          Exercise test             Vertical jump
+25       0          Electrocardiography       Left ventricular hypertrophy
+26       0          Composite                 Large-vessel peripheral artery disease
+27       0          Blood                     Brain natriuretic peptide
+28       0          Urine                     Albuminuria
+29       0          Blood                     Cholesterol
+30       0          Physical parameter        Fat percentage
+31       0          Blood                     Homocysteine
+32       0          Blood                     25-hydroxyvitamin D
+33       0          Ultrasonography           Carotid artery plaque
+34       0          Composite                 Metabolic syndrome
+35       0          Ultrasonography           Ejection fraction
+36       0          Spirometry                Forced expiratory volume in 1 second divided by height
+37       0          Blood                     Estradiol-to-sex hormone binding globulin ratio
+38       0          Electrocardiography       Axis deviation
+39       0          Physical parameter        Arm circumference
+40       0          Physical parameter        Skinfold thickness
+41       0          Electrocardiography       Q-QS
+42       0          Blood                     Hematocrit
+43       0          Blood                     Red blood cell distribution width
+44       0          Blood                     ApoB/ApoA1 ratio
+45       0          Composite                 Lipid accumulation product
+46       0          Blood                     Gamma-glutamyltransferase
+47       0          Sphygmomanometry          Blood pressure
+48       0          Exercise test             Strength
+49       0          Blood                     Glucose
+50       0          Composite                 HBP+HG+TG+HDL
+51       0          Physical parameter        Fat mass
+52       0          Echocardiography          Severe diastolic dysfunction
+53       0          Blood                     IgA to tissue transglutaminase
+54       0          Blood                     Neutrophilia
+55       0          Physical parameter        Body mass index squared
+56       0          Blood                     Cardiac troponin T, high-sensitivity
+57       0          Blood                     C-reactive protein
+58       0          Composite                 Body mass index and leg extensor strength
+59       0          Exercise test             Walking speed
+60       0          Physical parameter        Body fat percentage
+61       0          Blood                     Growth differentiation factor 15
+62       0          Electrocardiography       ST abnormalities
+63       0          Blood                     N-terminal atrial natriuretic peptide
+64       0          Blood                     Albumin, serum/plasma
+65       0          Electrocardiography       High R wave
+66       0          Blood                     Mean corpuscular volume
+67       0          Spirometry                Peak expiratory flow
+68       0          Blood                     White blood cell count
+69       0          Blood                     Cardiac troponin I
+70       0          Ultrasonography           Carotid intima-media thickness
+71       0          Spirometry                Forced expiratory volume
+72       0          Blood                     Cotinine
+73       0          Electrocardiography       ST-T segment changes
+74       0          Physical parameter        Waist-to-thigh ratio
+75       0          Ultrasonography           Intima-media echogenicity
+76       0          Physical parameter        Lean mass index
+77       0          Physical parameter        Ambulatory heart rate
+78       0          Blood                     Glycated hemoglobin
+79       0          Blood                     Cell-free DNA concentration
+80       0          Spirometry                Forced vital capacity
+81       0          Exercise test             Cardiorespiratory fitness
+82       0          Electrocardiography       Myocardial infarction
+83       0          Physical parameter        Resting heart rate
+84       0          Electrocardiography       Electrocardiogram Minnesota code 7-1
+85       0          Blood                     Insulin-like growth factor binding protein 1
+86       0          Composite                 QRS|T angle + Left bundle branch block
+87       0          Composite                 Forced vital capacity & inflammation-sensitive proteins
+88       0          Blood                     Subclinical hyperthyroidism
+89       0          Electrocardiography       QRS|T angle
+90       0          Blood                     N-terminal pro-brain natriuretic peptide
+91       0          Composite                 C-reactive protein (high-sensitivity), white blood cell count, and serum albumin
+92       0          Blood                     Monocyte count
+93       0          Blood                     Vitamin A
+94       0          Blood                     Neutrophil number
+95       0          Physical parameter        Resting heart rate, change in
+96       0          Physical parameter        Visual acuity
+97       0          Composite                 Testosterone and insulin-like growth factor I
+98       0          Urine                     Proteinuria
+99       0          Blood                     Interleukin-6
+100      0          Blood                     Mean corpuscular hemoglobin
+101      0          Blood                     Uric acid
+102      0          Electrocardiography       Early repolarization pattern
+103      0          Physical parameter        Obesity (BMI >= 30)
+104      0          Electrocardiography       ST depression
+105      0          Electrocardiography       Atrial fibrillation
+106      0          Composite                 HBP+HG+HDL
+107      0          Blood                     Mean sphered cells volume
+108      0          Physical parameter        Heart rate
+109      0          Blood                     Fibrinogen
+110      0          Blood                     β2-microglobulin
+111      0          Blood                     Triglycerides
+112      0          Urine                     pH
+113      0          Electrocardiography       T abnormality
+114      0          Physical parameter        Hip circumference
+115      0          Blood                     Total cholesterol to high-density lipoprotein cholesterol ratio
+116      0          Blood                     Lymphocyte percentage
+117      0          Blood                     Neutrophils percentage
+118      0          Blood                     Plateletcrit
+119      0          Blood                     Platelet count
+120      0          Exercise test             Graded exercise tolerance test score
+121      0          Electrocardiography       Electrocardiographic changes
+122      0          Other                     Carotid/brachial pulse pressure ratio
+123      0          Epigenetics               CpGs methylation pattern cg05575921 and cg06126421
+124      0          Electrocardiography       Electrocardiogram, major abnormalities
+125      0          Exercise test             Side step
+126      0          Electrocardiography       TV5 mean amplitude
+127      0          Physical parameter        Distance from rump to crown
+128      0          Exercise test             Heart rate recovery
+129      0          Blood                     High-density lipoprotein cholesterol
+130      0          Blood                     YKL-40
+131      0          Physical parameter        Waist circumference
+132      0          Epigenetics               CpGs methylation pattern cg06126421
+133      0          Blood                     Symmetrical dimethyl arginine
+134      0          Blood                     Testosterone
+135      0          Computed tomography       Extracoronary calcification sites
+136      0          Blood                     Subclinical hypothyroidism
+137      0          Blood                     beta-carotene
+138      0          Composite                 C-reactive protein + high-density lipoprotein cholesterol
+139      0          Blood                     Low-density lipoprotein cholesterol
+140      0          Sphygmomanometry          Peripheral artery disease
+141      0          Physical parameter        Weight
+142      0          Blood                     Immature reticulocytes fraction
+143      0          Physical parameter        Height
+144      0          Physical parameter        Standing height
+145      0          Composite                 Elevated waist circumference + elevated triglycerides
+146      0          Ultrasonography           Mitral diastolic early-to-late ratio
+147      0          Ultrasonography           Bone mineral density
+148      0          Blood                     Aspartate aminotransferase
+149      0          Blood                     beta-trace protein
+150      0          Blood                     Soluble ST2
+151      0          Electrocardiography       QTc interval
+152      0          Composite                 BMI and sedentary mobility
+153      0          Electrocardiography       Romhilt-Estes left ventricular hypertrophy score
+154      0          Physical parameter        Weight change
+155      0          Electrocardiography       Ischemic heart disease, electrocardiographic evidence
+156      0          Other                     Coronary heart disease
+157      0          Urine                     Creatinine excretion
+158      0          Blood                     von Willebrand factor
+159      0          Sphygmomanometry          Ankle-brachial index
+160      0          Blood                     Type I collagen degradation
+161      0          Composite                 High-density lipoprotein and blood pressure
+162      0          Blood                     Sodium, plasma
+163      0          Blood                     Lymphocyte count
+164      0          Blood                     IgA
+165      0          Sphygmomanometry          Postural hypotension
+166      0          Other                     Oxygen saturation
+167      0          Computed tomography       Visceral adipose tissue quality
+168      0          Spirometry                LMS-defined restrictive pattern
+169      0          Blood                     Myeloperoxidase
+170      0          Blood                     Iron
+171      0          Blood                     Fibroblast growth factor-23
+172      0          Blood                     Cystatin C
+173      0          Other                     Pulmonary diffusing capacity for carbon monoxide
+174      0          Blood                     Parathyroid hormone
+175      0          Exercise test             Sit-ups
+176      0          Blood                     Lead
+177      0          Blood                     Insulin-like growth factor 1
+178      0          Electrocardiography       QT interval
+179      0          Ultrasonography           Cardiac calcification
+180      0          Blood                     Loss of Y chromosome
+181      0          Electrocardiography       TV1 mean amplitude
+182      0          Electrocardiography       QT prolongation
+183      0          Other                     Diabetes mellitus, type 2
+184      0          Blood                     Insulin
+185      0          Blood                     Homeostatic model assessment of insulin resistance
+186      0          Blood                     Insulin-like growth factor binding protein 3
+187      0          Spirometry                Forced expiratory volume in 1 s and forced expiratory volume in 6 s, ratio of
+188      0          Physical parameter        Waist-to-height ratio
+189      0          Electrocardiography       Ventricular premature beats during exercise
+190      0          Blood                     Interleukin-10
+191      0          Composite                 QRS|T angle + Right bundle branch block
+192      0          Blood                     Adiponectin
+193      0          Blood                     Osteocalcin
+194      0          Physical parameter        Visceral fat mass
+195      0          Blood                     Soluble tumour necrosis factor receptor 1
+196      0          Blood                     Mean reticulocytes volume
+197      0          Blood                     Reticulocytes, high light scatter, percentage
+198      0          Blood                     Estradiol
+199      0          Blood                     Monocyte percentage
+200      0          Composite                 Leptin and C-reactive protein
+201      0          Blood                     Creatinine
+202      0          Blood                     Klotho
+203      0          Blood                     Anion gap, serum albumin adjusted
+204      0          Electrocardiography       Abnormal P terminal force
+205      0          Other                     SF-12-derived physical component summaries
+206      0          Blood                     T cells
+207      0          Electrocardiography       Heart rate variability, slope of the power-law regression line of
+208      0          Electrocardiography       Unrecognized myocardial infarction
+209      0          Blood                     Oxygenated carotenoids
+210      0          Blood                     CD4:CD8 ratio
+211      0          Blood                     H-FABP
+212      0          Urine                     Albumin-to-creatinine ratio
+213      0          Blood                     Interleukin 1-beta
+214      0          Blood                     Reticulocytes, high light scatter, number
+215      0          Blood                     Carboxyl-terminal telopeptide of collagen type I
+216      0          Physical parameter        Ankle width
+217      0          Blood                     Proinsulin
+218      0          Electrocardiography       Heart rate variability, low frequency power, natural logarithm
+219      0          Other                     Pulse-wave amplitude
+220      0          Blood                     Amino-terminal peptide of procollagen type III
+221      0          Spirometry                Forced expiratory volume in 1 second/height^3
+222      0          Blood                     CD8 cells
+223      0          Sphygmomanometry          Orthostatic hypotension
+224      0          Blood                     Alpha-1-acid glycoprotein
+225      0          Epigenetics               cg18120323
+226      0          Epigenetics               cg16197857
+227      0          Epigenetics               cg14575484
+228      0          Epigenetics               cg03402235
+229      0          Blood                     Lipoprotein-associated phospholipase A2 activity
+230      0          Ultrasonography           Left carotid intima-media thickening
+231      0          Epigenetics               cg16781880
+232      0          Epigenetics               cg27635330
+233      0          Computed tomography       Renal artery calcification
+234      0          Composite                 Albumin-to-creatinine ratio and metabolic syndrome
+235      0          Epigenetics               cg00292432
+236      0          Blood                     Butyrylcholinesterase activity
+237      0          Composite                 Interleukin-6 and tumor necrosis factor-alpha
+238      0          Epigenetics               cg03623394
+239      0          Blood                     Folate
+240      0          Epigenetics               cg03576411
+241      0          Electrocardiography       QRS voltage, low
+242      0          Computed tomography       Thoracic aorta calcification
+243      0          Blood                     Reticulocytes percentage
+244      0          Blood                     Leptin
+245      0          Ultrasonography           Broadband ultrasound attenuation
+246      0          Sphygmomanometry          Mean arterial pressure
+247      0          Blood                     Stromal cell derived factor
+248      0          Sphygmomanometry          Aortic augmentation index
+249      0          Blood                     Remnant cholesterol
+250      0          Epigenetics               cg21158502
+251      0          Electrocardiography       Heart rate variability, total power, natural logarithm
+252      0          Epigenetics               cg01723148
+253      0          Epigenetics               cg24319508
+254      0          Epigenetics               cg07922411
+255      0          Epigenetics               cg17835356
+256      0          Epigenetics               cg11808581
+257      0          Epigenetics               cg14403741
+258      0          Epigenetics               cg26106417
+259      0          Epigenetics               cg20220255
+260      0          Epigenetics               cg01093854
+261      0          Epigenetics               cg19733534
+262      0          Composite                 BMI + Predicted forced expiratory volume in 1 second percentile (FEV1%)
+263      0          Other                     Relative heart volume
+264      0          Epigenetics               cg18533397
+265      0          Sphygmomanometry          Ankle brachial pressure
+266      0          Physical parameter        Presenting visual acuity
+267      0          Epigenetics               cg01514859
+268      0          Epigenetics               cg22927043
+269      0          Epigenetics               cg12844117
+270      0          Epigenetics               cg27601809
+271      0          Epigenetics               cg15505642
+272      0          Physical parameter        Visceral fat area
+273      0          Epigenetics               cg23608075
+274      0          Epigenetics               cg01065605
+275      0          Epigenetics               cg24197330
+276      0          Epigenetics               cg26160180
+277      0          Spirometry                Forced expiratory volume in 1 second
+278      0          Physical parameter        Waist-to-hip ratio
+279      0          Blood                     Rheumatoid factor
+280      0          Epigenetics               cg16054184
+281      0          Epigenetics               cg26989202
+282      0          Blood                     Lutein
+283      0          Electrocardiography       STV5 gradient
+284      0          Electrocardiography       Electrocardiogram Minnesota code 9-4-2
+285      0          Epigenetics               cg18741439
+286      0          Epigenetics               cg26318321
+287      0          Epigenetics               cg03967329
+288      0          Epigenetics               cg24259629
+289      0          Epigenetics               cg11950982
+290      0          Epigenetics               cg01310875
+291      0          Epigenetics               cg06765172
+292      0          Epigenetics               cg19662895
+293      0          Epigenetics               cg07161062
+294      0          Epigenetics               cg12379145
+295      0          Electrocardiography       Low frequency power of heart rate variability
+296      0          Epigenetics               cg25468681
+297      0          Epigenetics               cg23015983
+298      0          Epigenetics               cg02330352
+299      0          Epigenetics               cg13665021
+300      0          Blood                     Testosterone-to-sex hormone binding globulin ratio
+301      0          Epigenetics               cg11308319
+302      0          Epigenetics               cg06281205
+303      0          Epigenetics               cg08529529
+304      0          Epigenetics               cg25649038
+305      0          Epigenetics               cg27257822
+306      0          Epigenetics               cg27224642
+307      0          Epigenetics               cg09693464
+308      0          Epigenetics               cg23524537
+309      0          Epigenetics               cg02898994
+310      0          Blood                     beta-cryptoxanthin
+311      0          Epigenetics               cg04373937
+312      0          Epigenetics               cg24737067
+313      0          Epigenetics               cg23515619
+314      0          Epigenetics               cg19174658
+315      0          Epigenetics               cg13009365
+316      0          Blood                     Alkaline phosphatase
+317      0          Ultrasonography           Lower carotid distensibility
+318      0          Epigenetics               cg10916429
+319      0          Electrocardiography       Heart rate variability, very low frequency power, natural logarithm
+320      0          Epigenetics               cg23324787
+321      0          Epigenetics               cg12484411
+322      0          Epigenetics               cg03490711
+323      0          Epigenetics               cg16096311
+324      0          Epigenetics               cg03976645
+325      0          Blood                     Platelet distribution width
+326      0          Blood                     Basophil count
+327      0          Blood                     IgM
+328      0          Electrocardiography       Chronotropic index
+329      0          Epigenetics               cg13735018
+330      0          Epigenetics               cg02772928
+331      0          Epigenetics               cg05376185
+332      0          Epigenetics               cg07735969
+333      0          Epigenetics               cg07457727
+334      0          Epigenetics               cg26078407
+335      0          Epigenetics               cg16248783
+336      0          Epigenetics               cg20585841
+337      0          Other                     Relative abdominal fat
+338      0          Epigenetics               cg09544380
+339      0          Epigenetics               cg16989443
+340      0          Electrocardiography       T-axis deviation
+341      0          Blood                     Insulin-like growth factor binding protein 2
+342      0          Blood                     Mitochondrial DNA copy number
+343      0          Electrocardiography       QRS non-dipolar voltage
+344      0          Blood                     Follicle stimulating hormone
+345      0          Blood                     alpha-carotene
+346      0          Blood                     Bicarbonate
+347      0          Urine                     Kidney injury molecule-1
+348      0          Blood                     Tumor necrosis factor alpha
+349      0          Sphygmomanometry          Sleep-trough morning surge in systolic blood pressure
+350      0          Ultrasonography           Global longitudinal speckle strain
+351      0          Blood                     Very low density lipoprotein particle size
+352      0          Blood                     Very-low-density lipoprotein
+353      0          Blood                     17beta-E(2)
+354      0          Blood                     Phosphorus
+355      0          Electrocardiography       Heart rate variability
+356      0          Electrocardiography       QRS Transition, clockwise rotation
+357      0          Electrocardiography       Heart rate variability, high frequency power, natural logarithm
+358      0          Physical parameter        Dual sensory impairment
+359      0          Blood                     Reticulocytes number
+360      0          Blood                     Eosinophils percentage
+361      0          Ultrasonography           QUI stiffness
+362      0          Physical parameter        Abdominal subcutaneous fat
+363      0          Electrocardiography       T-wave inversion
+364      0          Blood                     Plasma viscosity
+365      0          Electrocardiography       Atrial premature complexes
+366      0          Sphygmomanometry          Pulse pressure
+367      0          Blood                     Leukocyte telomere length
+368      0          Blood                     Reticulocytes count
+369      0          Composite                 Obesity + insulin resistance
+370      0          Electrocardiography       Abnormal T-wave axis
+371      0          Electrocardiography       Prior myocardial infarction
+372      0          Physical parameter        Fat-free mass index
+373      0          Blood                     C-reactive protein, high-sensitivity
+374      0          Electrocardiography       RR interval, natural logarithm of the standard deviation of normal
+375      0          Blood                     Carotenoids
+376      0          Other                     Abdominal aortic calcification
+377      0          Blood                     Bilirubin
+378      0          Blood                     Total thiols
+379      0          Computed tomography       Subcutaneous adipose tissue quality
+380      0          Electrocardiography       QTrr
+381      0          Composite                 Diabetes diagnosis
+382      0          Electrocardiography       Electrocardiogram, any abnormality
+383      0          Physical parameter        Pericardial fat
+384      0          Other                     Cortisol
+385      0          Blood                     Citrate
+386      0          Blood                     Lycopene
+387      0          Physical parameter        Body adiposity index
+388      0          Composite                 QRS|T angle + No bundle branch block
+389      0          Computed tomography       Pericardial adipose tissue volume
+390      0          Blood                     Osteoprotegerin
+391      0          Blood                     Mean platelet volume
+392      0          Electrocardiography       Deep terminal negativity of P wave in V1
+393      0          Blood                     Thyroid stimulating hormone
+394      0          Electrocardiography       Cornell voltage
+395      0          Blood                     Thyroxine
+396      0          Blood                     Ascorbic acid
+397      0          Blood                     Angiopoietin-2
+398      0          Electrocardiography       STV5 mean amplitude
+399      0          Electrocardiography       RR intervals, standard deviation
+400      0          Physical parameter        Lean body mass
+401      0          Blood                     Alpha-1-antichymotrypsin
+402      0          Electrocardiography       Prolonged QT interval
+403      0          Electrocardiography       Delayed QRS transition
+404      0          Blood                     Antinuclear autoantibodies
+405      0          Blood                     Carotenes
+406      0          Composite                 Adiponectin and N-terminal pro-brain natriuretic peptide
+407      0          Blood                     Asymmetric dimethylarginine
+408      0          Urine                     α1-microglobulin
+409      0          Composite                 Hyperthyroidism
+410      0          Electrocardiography       T non-dipolar voltage
+411      0          Blood                     Amino-terminal propeptide of type I collagen
+412      0          Blood                     Basophil percentage
+413      0          Blood                     trans-lycopene
+414      0          Physical parameter        Muscle mass index
+415      0          Epigenetics               CpG island methylation
+416      0          Electrocardiography       Right bundle branch block
+417      0          Electrocardiography       Abnormal p-wave axis
+418      0          Blood                     Soluble intracellular adhesion molecule-1
+419      0          Blood                     SUA
+420      0          Exercise test             Heart rate, rest-to-peak
+421      0          Blood                     Neutrophil gelatinase-associated lipocalinin
+422      0          Other                     Reflection magnitude
+423      0          Blood                     Prolactin
+424      0          Blood                     Factor VIII
+425      0          Other                     Intraday circadian fragmentation
+426      0          Urine                     Sodium, 24-hour excreted
+427      0          Blood                     Homoarginine
+428      0          Blood                     Magnesium
+429      0          Physical parameter        Waist-to-calf ratio
+430      0          Echocardiography          Interventricular septum thickness
+431      0          Urine                     TFF-3
+432      0          Other                     Interday rhythm stability
+433      0          Composite                 Allostatic load score
+434      0          Physical parameter        Thigh circumference
+435      0          Physical parameter        Waist-to-arm ratio
+436      0          Computed tomography       Skeletal muscle density
+437      0          Blood                     Interleukin-8
+438      0          Other                     Non-exercise testing for fitness score
+439      0          Physical parameter        Mid upper arm circumference
+440      0          Computed tomography       Thigh intramuscular fat
+441      0          Blood                     Peroxiredoxin 4
+442      0          Blood                     Growth hormone
+443      0          Physical parameter        Calf circumference
+444      0          Blood                     Fibrin D-dimer
+445      0          Blood                     Club (a.k.a. Clara) cell secretory protein
+446      0          Electrocardiography       T-wave residuum
+447      0          Blood                     CMV seropositivity
+448      0          Blood                     Galectin-3
+449      0          Spirometry                Forced expiratory volume in 1 second, percentage of predicted
+450      0          Spirometry                Forced vital capacity, percentage of predicted
+451      0          Electrocardiography       QRS Transition, counterclockwise rotation
+452      0          Urine                     Calbindin
+453      0          Physical parameter        Body fat mass index
+454      0          Other                     Pulmonary diffusing capacity for carbon monoxide, percentage of predicted
+455      0          Ultrasonography           Cerebral vasomotor reactivity
+456      0          Composite                 High-density lipoprotein cholesterol and total cholesterol
+457      0          Blood                     Soluble CD14
+458      0          Composite                 Hypothyroidism
+459      0          Electrocardiography       PR interval
+460      0          Computed tomography       Bone density
+461      0          Blood                     Factor VIIc
+462      0          Blood                     sj/β-TREC ratio
+463      0          Other                     Steps per day
+464      0          Electrocardiography       P wave duration
+465      0          Blood                     Triglyceride/HDL ratio
+466      0          Other                     Expired air carbon monoxide
+467      0          Epigenetics               Extrinsic epigenetic age acceleration
+468      0          Blood                     Urea
+469      0          Physical parameter        Triceps skinfold
+470      0          Epigenetics               Universal epigenetic age acceleration
+471      0          Spirometry                Forced expiratory volume in 1 second, % of predicted value
+472      0          Epigenetics               Intrinsic epigenetic age acceleration
+473      0          Electrocardiography       QTc dispersion minimum value
+474      0          Composite                 Fatty liver index
+475      0          Blood                     Non-high-density lipoprotein cholesterol
