@@ -124,7 +124,7 @@ export default function HomePage() {
         <Card className="p-6 space-y-4">
           <div className="space-y-3">
             <h2 className="text-lg font-semibold">
-              Today's Progress
+              Today's Progresssssss
             </h2>
             {(() => {
               const todayStatus = habitStatuses.find((s) => s.date === today);

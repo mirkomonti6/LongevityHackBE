@@ -21,7 +21,7 @@ export default function AppLayout({
     <div className="fixed inset-0 flex flex-col bg-background overflow-hidden">
       <div className="flex-1 overflow-y-auto pb-20">{children}</div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-background border-t">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t z-50">
         <div className="max-w-md mx-auto">
           <nav className="flex items-center justify-around h-16">
             {navItems.map((item) => {
