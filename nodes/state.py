@@ -52,6 +52,12 @@ class GraphState(TypedDict):
     topOpportunityBiomarker: NotRequired[str]  # Top biomarker to optimize (from LLM)
     potentialBonusYears: NotRequired[float]  # Potential bonus years from optimizing top biomarker
     
+    # PhenoAge biological age fields
+    biologicalAgeNow: NotRequired[float]  # Current biological age (PhenoAge)
+    biologicalAgeTarget: NotRequired[float]  # Target biological age (optimized)
+    yearsBiologicalGained: NotRequired[float]  # Total years gainable through optimization
+    phenoageBiomarkerContributions: NotRequired[list]  # Per-biomarker contributions sorted by impact
+    
     # Retry mechanism fields
     retryCount: NotRequired[int]  # Number of retries attempted (0-2)
     critiqueFeedback: NotRequired[str]  # Critique details to pass back to suggestion node

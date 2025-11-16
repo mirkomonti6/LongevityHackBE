@@ -189,6 +189,7 @@ async def execute_graph(request: ApiInput):
         blood_data_dict: Dict[str, Any] = {}
         
         # Handle lab_pdf parsing if provided
+        lab_results = None
         if request.lab_pdf:
             try:
                 # Instantiate the PDF parser
@@ -249,6 +250,10 @@ async def execute_graph(request: ApiInput):
             "messages": [msg.model_dump() for msg in request.pastMessages],
             "pdf": request.pdf.model_dump()
         }
+        
+        # Add lab_results to pdf if available (for PhenoAge biomarker mapping)
+        if lab_results:
+            initial_state["pdf"] = lab_results
         
         # Add userProfile if we have any data
         if user_profile_dict:

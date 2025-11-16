@@ -20,6 +20,8 @@ from .smartwatch_db import (
     get_smartwatch_insights_summary,
     match_interventions_to_activity_gaps
 )
+from .phenoage_calculator import compute_years_gained, BiomarkerError
+from .biomarker_mapper import map_to_phenoage_biomarkers
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from db.biomarkers.longevity_score import LongevityScoreCalculator, BiomarkerMeasurement
@@ -356,6 +358,86 @@ def suggestion_node(state: GraphState) -> GraphState:
     # END LONGEVITY SCORE CALCULATION
     # ============================================================================
     
+    # ============================================================================
+    # PHENOAGE BIOLOGICAL AGE CALCULATION
+    # ============================================================================
+    
+    phenoage_results = None
+    pdf_data = state.get("pdf", {})
+    
+    try:
+        logger.info("=== PhenoAge Biological Age Calculation Started ===")
+        
+        # Map biomarkers to PhenoAge format using LLM
+        mapped_biomarkers = map_to_phenoage_biomarkers(
+            pdf_data=pdf_data,
+            blood_data=blood_data,
+            user_profile=user_profile,
+            client=client
+        )
+        
+        if mapped_biomarkers:
+            # Check if we have at least age (required) and some biomarkers
+            required_count = sum(1 for k in mapped_biomarkers.keys() if mapped_biomarkers[k] is not None)
+            logger.info(f"Mapped {required_count} PhenoAge biomarkers")
+            
+            # Try to compute PhenoAge if we have age (required)
+            # Missing biomarkers will be filled with optimal values
+            if mapped_biomarkers.get("age_years") is not None:
+                try:
+                    # Filter out None values, but keep structure
+                    # Missing biomarkers will be filled with optimal values in compute_years_gained
+                    biomarkers_for_calc = {k: v for k, v in mapped_biomarkers.items() if v is not None}
+                    
+                    # Check which biomarkers are missing (will be filled with optimal values)
+                    missing_biomarkers = [k for k in ["albumin_g_dl", "creatinine_mg_dl", 
+                                                       "glucose_mg_dl", "crp_mg_l", "lymphocyte_percent",
+                                                       "mcv_fl", "rdw_percent", "alp_u_l", "wbc_10e3_per_uL"]
+                                         if k not in biomarkers_for_calc]
+                    
+                    if missing_biomarkers:
+                        logger.info(f"Missing {len(missing_biomarkers)} biomarkers - will use optimal values: {', '.join(missing_biomarkers)}")
+                    
+                    # Calculate PhenoAge (missing biomarkers will be filled with optimal values)
+                    phenoage_results = compute_years_gained(biomarkers_for_calc)
+                    
+                    logger.info("="*60)
+                    logger.info("🧬 PHENOAGE BIOLOGICAL AGE RESULTS 🧬")
+                    logger.info("="*60)
+                    logger.info(f"Current Biological Age: {phenoage_results['biological_age_now']:.2f} years")
+                    logger.info(f"Chronological Age: {age} years")
+                    logger.info(f"Target Biological Age (optimized): {phenoage_results['biological_age_target']:.2f} years")
+                    logger.info(f"Years Gainable: {phenoage_results['years_biological_gained']:.2f} years")
+                    
+                    if missing_biomarkers:
+                        logger.info(f"Note: {len(missing_biomarkers)} biomarkers assumed optimal (not in test data)")
+                    
+                    if phenoage_results['per_biomarker_contributions']:
+                        logger.info("="*60)
+                        logger.info("🎯 TOP BIOMARKER OPPORTUNITIES (PhenoAge)")
+                        logger.info("="*60)
+                        for i, contrib in enumerate(phenoage_results['per_biomarker_contributions'][:5], 1):
+                            logger.info(f"{i}. {contrib['biomarker']}: +{contrib['years_gained_if_optimized']:.2f} years")
+                        logger.info("="*60)
+                        
+                except BiomarkerError as e:
+                    logger.warning(f"PhenoAge calculation error: {e}")
+                except Exception as e:
+                    logger.error(f"Error during PhenoAge calculation: {e}")
+            else:
+                logger.warning("Age not available for PhenoAge calculation")
+        else:
+            logger.warning("Could not map biomarkers to PhenoAge format")
+            
+    except Exception as e:
+        logger.error(f"Error during PhenoAge biological age calculation: {e}")
+    
+    logger.info("=== PhenoAge Biological Age Calculation Completed ===\n")
+    
+    # ============================================================================
+    # END PHENOAGE BIOLOGICAL AGE CALCULATION
+    # ============================================================================
+    
     # Identify problematic biomarkers
     problematic = identify_problematic_biomarkers(blood_data, threshold=80)
     logger.info(f"Identified {len(problematic)} problematic biomarkers")
@@ -446,17 +528,44 @@ Activity/Recovery Gaps Identified:
 {gaps_summary if gaps_summary else "No major gaps - solid baseline!"}
 """
     
-    # Build longevity score context
-    longevity_context = ""
-    if top_opportunity:
-        longevity_context = f"""
-🎯 TOP LONGEVITY OPPORTUNITY (Backed by Science):
-- Biomarker: {top_opportunity['biomarker']}
-- Current Score: {top_opportunity['current_score']}/100
-- Your Value: {top_opportunity['your_value']}
-- Target Range: {top_opportunity['target']}
-- 💎 POTENTIAL GAIN: +{top_opportunity['bonus_years']} BONUS YEARS
-- This is THE #1 opportunity to maximize lifespan! Optimizing this biomarker alone could add {top_opportunity['bonus_years']} years!
+    # Build PhenoAge biological age context (PRIMARY SOURCE - use this for intervention selection)
+    phenoage_context = ""
+    if phenoage_results:
+        bio_age = phenoage_results['biological_age_now']
+        target_age = phenoage_results['biological_age_target']
+        years_gainable = phenoage_results['years_biological_gained']
+        age_diff = bio_age - age  # Biological age vs chronological age
+        
+        age_status = "younger" if age_diff < 0 else "older"
+        age_diff_abs = abs(age_diff)
+        
+        top_pheno_biomarker = None
+        if phenoage_results['per_biomarker_contributions']:
+            top_pheno_biomarker = phenoage_results['per_biomarker_contributions'][0]
+        
+        # Build detailed PhenoAge context with all top opportunities
+        phenoage_opportunities = ""
+        if phenoage_results['per_biomarker_contributions']:
+            top_3 = phenoage_results['per_biomarker_contributions'][:3]
+            opportunities_list = "\n".join([
+                f"  {i+1}. {opp['biomarker']}: +{opp['years_gained_if_optimized']:.2f} years if optimized"
+                for i, opp in enumerate(top_3)
+            ])
+            phenoage_opportunities = f"""
+TOP PHENOAGE BIOMARKER OPPORTUNITIES (sorted by impact):
+{opportunities_list}
+"""
+        
+        phenoage_context = f"""
+🧬 PHENOAGE BIOLOGICAL AGE ANALYSIS (Levine Model) - USE THIS FOR INTERVENTION SELECTION:
+- Chronological Age: {age} years
+- Current Biological Age: {bio_age:.1f} years ({age_diff_abs:.1f} years {age_status} than chronological)
+- Target Biological Age (if all biomarkers optimized): {target_age:.1f} years
+- 💎 TOTAL YEARS GAINABLE: +{years_gainable:.1f} biological years through optimization
+{phenoage_opportunities}
+- This is based on the PhenoAge model which predicts biological age from 9 key biomarkers + age
+- Biological age is a better predictor of healthspan and lifespan than chronological age
+- **PRIORITIZE interventions that target the top PhenoAge biomarker opportunities listed above**
 """
     
     # Build retry/feedback context if this is a retry
@@ -483,7 +592,7 @@ USER PROFILE:
 - Age: {age}
 - Gender: {gender}
 - Occupation: {job}
-{longevity_context}
+{phenoage_context}
 BIOMARKERS THAT NEED SOME LOVE (priority order):
 {chr(10).join([f"- {name}: {value} (score: {score:.1f}/100, optimal range)" for name, value, score, priority in problematic[:5]])}
 {smartwatch_context}
@@ -498,8 +607,9 @@ USER'S CURRENT CONCERN:
 
 YOUR MISSION:
 1. Pick the SINGLE BEST intervention considering:
-   - **HIGHEST PRIORITY**: The TOP LONGEVITY OPPORTUNITY if provided (focus on the biomarker with the biggest potential bonus years!)
-   - Which biomarker needs the most attention (highest priority)
+   - **HIGHEST PRIORITY**: If PhenoAge analysis is provided, prioritize interventions that target the TOP PhenoAge biomarker opportunities (these directly reduce biological age and are the most impactful!)
+   - Focus on the biomarker with the highest years gainable from the PhenoAge analysis
+   - Which biomarker needs the most attention based on PhenoAge opportunities
    - Their current fitness level and activity patterns from smartwatch data
    - What fits their age, gender, and lifestyle best
    - What's actually doable and not super complicated
@@ -510,8 +620,9 @@ YOUR MISSION:
 2. Write THREE sections:
 
    A) REASONING (150-200 words): Explain WHY you chose this intervention over others:
-      - **IF TOP LONGEVITY OPPORTUNITY IS PROVIDED**: Lead with this! Mention the specific bonus years they could gain (e.g., "Your Cholesterol is your #1 opportunity - optimizing it could add 6 bonus years to your life!")
-      - Reference SPECIFIC biomarker values (e.g., "Your testosterone is at 320 ng/dL...")
+      - **IF PHENOAGE ANALYSIS IS PROVIDED**: Lead with this! Mention their biological age vs chronological age, and how optimizing the top PhenoAge biomarker could reduce their biological age (e.g., "Your biological age is 40.5 but you're only 35 - optimizing your albumin could reduce it by 9.2 years!")
+      - Reference the specific PhenoAge biomarker opportunity and the years gainable
+      - Reference SPECIFIC biomarker values from the PhenoAge analysis
       - Reference SPECIFIC smartwatch metrics with actual values (e.g., "Your HRV is 42ms, well below the 50-70ms target..." or "You're averaging only 3,500 steps/day...")
       - Connect the dots: explain how BOTH biomarkers AND smartwatch data justify this intervention
       - If suggesting exercise/activity: cite their VO2 max value, active minutes, or step count
@@ -524,7 +635,7 @@ YOUR MISSION:
    B) SUGGESTION (200-300 words): The actual recommendation like texting a friend! 📱
       - Use emojis naturally throughout (but don't overdo it!)
       - Keep it conversational and friendly - like "Hey!" not "Dear patient"
-      - **IF TOP LONGEVITY OPPORTUNITY**: Mention the exciting potential bonus years gain to motivate them! (e.g., "This could literally add 6 years to your life! 🎉")
+      - **IF PHENOAGE ANALYSIS IS PROVIDED**: Mention the exciting potential biological age reduction to motivate them! (e.g., "This could literally reduce your biological age by 9 years! 🎉" or "Your biological age is 40.5 but you're only 35 - optimizing this could bring it down!")
       - Weave in SPECIFIC smartwatch data naturally to back up your suggestions (e.g., "Looking at your smartwatch, you're only getting 25 active minutes per day when we need 60+...")
       - When recommending action, justify it with their actual metrics (steps, HRV, VO2 max, active minutes)
       - If suggesting a sedentary person do more activity, reference their low step count or active minutes
@@ -571,7 +682,7 @@ Respond ONLY with valid JSON in this exact format:
     "selected_intervention_id": "the-intervention-id",
     "reasoning": "Your detailed reasoning here with emojis...",
     "suggestion": "Your fun, friendly, science-backed recommendation here with emojis...",
-    "biomarker": "The primary biomarker name this intervention targets",
+    "biomarker": "The primary biomarker name this intervention targets (use PhenoAge biomarker name if available)",
     "bonus_years": 6.5,
     "challenge": {{
         "intervention_name": "Intervention Name",
@@ -582,7 +693,7 @@ Respond ONLY with valid JSON in this exact format:
     }}
 }}
 
-IMPORTANT: bonus_years must be a NUMBER (e.g., 6.5), NOT a string. Use the bonus years from the TOP LONGEVITY OPPORTUNITY if provided above."""
+IMPORTANT: bonus_years must be a NUMBER (e.g., 6.5), NOT a string. Use the years gainable from the TOP PHENOAGE BIOMARKER OPPORTUNITY if provided above (e.g., if top opportunity is albumin_g_dl with +9.17 years, use 9.17)."""
 
     response = client.chat.completions.create(
         model="deepseek-ai/DeepSeek-V3.2-Exp",
@@ -659,6 +770,13 @@ IMPORTANT: bonus_years must be a NUMBER (e.g., 6.5), NOT a string. Use the bonus
         "potentialBonusYears": bonus_years,
         "challenge": challenge
     }
+    
+    # Add PhenoAge results if available
+    if phenoage_results:
+        result["biologicalAgeNow"] = phenoage_results["biological_age_now"]
+        result["biologicalAgeTarget"] = phenoage_results["biological_age_target"]
+        result["yearsBiologicalGained"] = phenoage_results["years_biological_gained"]
+        result["phenoageBiomarkerContributions"] = phenoage_results["per_biomarker_contributions"]
     
     # Clear critique feedback after processing (to avoid confusion in next iteration)
     if critique_feedback:
