@@ -8,6 +8,7 @@ allowing it to be accessed via HTTP requests.
 import os
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, Literal, Dict, Any
 from langgraph_app import create_graph
@@ -22,6 +23,15 @@ app = FastAPI(
     title="LangGraph API",
     description="API for LangGraph suggestion and critique workflow",
     version="1.0.0"
+)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=False,  # Cannot be True when allow_origins=["*"]
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
 )
 
 # Initialize the graph once at startup
