@@ -538,28 +538,34 @@ YOUR MISSION:
    C) CHALLENGE: Create a gamified 10-day challenge with:
       - intervention_name: The intervention name
       - duration_days: 10
-      - daily_tasks: Array of 10 strings with SPECIFIC, ACTIONABLE tasks (not vague!)
-        * Each task must include EXACT details: what to do, how much, when, and how
+      - daily_tasks: Array of 10 objects with SPECIFIC, ACTIONABLE tasks (not vague!)
+        * Each object must have TWO fields:
+          1. "activity": The daily activity description with EXACT details (what to do, how much, when, and how)
+          2. "steps": A numeric target value appropriate for the activity type:
+             - Exercise/activity: steps (e.g., 5000), minutes (e.g., 20), or heart rate (e.g., 130)
+             - Supplements: dosage in mg/units (e.g., 500)
+             - Diet: servings (e.g., 2), portions (e.g., 1), or grams (e.g., 150)
+             - Lifestyle: duration in minutes (e.g., 15) or frequency count (e.g., 3)
         * Use progression (start easy, build gradually)
         * Add milestone celebrations (Day 3, Day 5, Day 7, Day 10)
         
         EXAMPLES OF SPECIFIC vs VAGUE TASKS:
-        ❌ VAGUE: "Day 1: Take your supplement - Let's go! 💪"
-        ✅ SPECIFIC: "Day 1: Take 500mg Omega-3 with breakfast (around 8-9am). Set a phone reminder! 🐟"
+        ❌ VAGUE: {{"activity": "Day 1: Take your supplement - Let's go! 💪", "steps": 0}}
+        ✅ SPECIFIC: {{"activity": "Day 1: Take 500mg Omega-3 with breakfast (around 8-9am). Set a phone reminder! 🐟", "steps": 500}}
         
-        ❌ VAGUE: "Day 1: Do some cardio - Beast mode! 🔥"
-        ✅ SPECIFIC: "Day 1: 20-min brisk walk after lunch. Keep pace where you can talk but not sing. 🚶‍♂️"
+        ❌ VAGUE: {{"activity": "Day 1: Do some cardio - Beast mode! 🔥", "steps": 0}}
+        ✅ SPECIFIC: {{"activity": "Day 1: 20-min brisk walk after lunch. Keep pace where you can talk but not sing. 🚶‍♂️", "steps": 5000}}
         
-        ❌ VAGUE: "Day 3: Keep going with your routine! 🌟"
-        ✅ SPECIFIC: "Day 3: 25-min jog or cycle (increase intensity slightly). Aim for 130-140 heart rate. 🎯"
+        ❌ VAGUE: {{"activity": "Day 3: Keep going with your routine! 🌟", "steps": 0}}
+        ✅ SPECIFIC: {{"activity": "Day 3: 25-min jog or cycle (increase intensity slightly). Aim for 130-140 heart rate. 🎯", "steps": 6000}}
         
-        ❌ VAGUE: "Day 5: You're halfway there! 💪"
-        ✅ SPECIFIC: "Day 5: Take 500mg Omega-3 with breakfast + log how you feel (energy, focus). Halfway! 🌟"
+        ❌ VAGUE: {{"activity": "Day 5: You're halfway there! 💪", "steps": 0}}
+        ✅ SPECIFIC: {{"activity": "Day 5: Take 500mg Omega-3 with breakfast + log how you feel (energy, focus). Halfway! 🌟", "steps": 500}}
         
-        FOR SUPPLEMENTS: Include exact dosage, timing (breakfast/lunch/dinner), and practical tips
-        FOR EXERCISE: Include exact duration, intensity level, type of activity, and heart rate/pace guidance
-        FOR DIET: Include specific foods, portion sizes, meal timing, and simple recipes
-        FOR LIFESTYLE: Include exact duration, time of day, and step-by-step instructions
+        FOR SUPPLEMENTS: Include exact dosage in "steps" field (mg/units), timing in "activity" (breakfast/lunch/dinner), and practical tips
+        FOR EXERCISE: Include exact duration, intensity level, type of activity, and heart rate/pace guidance in "activity"; use "steps" for step count, minutes, or target heart rate
+        FOR DIET: Include specific foods, portion sizes, meal timing, and simple recipes in "activity"; use "steps" for servings, portions, or grams
+        FOR LIFESTYLE: Include exact duration, time of day, and step-by-step instructions in "activity"; use "steps" for minutes or frequency count
         
       - success_criteria: What success looks like (from expected_improvement)
       - category: The intervention category
@@ -576,7 +582,18 @@ Respond ONLY with valid JSON in this exact format:
     "challenge": {{
         "intervention_name": "Intervention Name",
         "duration_days": 10,
-        "daily_tasks": ["Day 1: ...", "Day 2: ...", "Day 3: ...", "Day 4: ...", "Day 5: ...", "Day 6: ...", "Day 7: ...", "Day 8: ...", "Day 9: ...", "Day 10: ..."],
+        "daily_tasks": [
+            {{"activity": "Day 1: ...", "steps": 5000}},
+            {{"activity": "Day 2: ...", "steps": 5500}},
+            {{"activity": "Day 3: ...", "steps": 6000}},
+            {{"activity": "Day 4: ...", "steps": 6500}},
+            {{"activity": "Day 5: ...", "steps": 7000}},
+            {{"activity": "Day 6: ...", "steps": 7500}},
+            {{"activity": "Day 7: ...", "steps": 8000}},
+            {{"activity": "Day 8: ...", "steps": 8500}},
+            {{"activity": "Day 9: ...", "steps": 9000}},
+            {{"activity": "Day 10: ...", "steps": 10000}}
+        ],
         "success_criteria": "Expected improvement description",
         "category": "category_name"
     }}
