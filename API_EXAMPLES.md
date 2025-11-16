@@ -4,9 +4,17 @@ Complete examples for calling the Biohacker Agent API with different health scen
 
 ## Base URL
 
+**HTTP (if SSL certificates not available)**:
 ```
 http://localhost:8000
 ```
+
+**HTTPS (recommended, default)**:
+```
+https://localhost:8443
+```
+
+> **Note**: The server automatically uses HTTPS when SSL certificates are present. See `POSTMAN_GUIDE.md` for Postman setup instructions.
 
 ## Endpoints
 

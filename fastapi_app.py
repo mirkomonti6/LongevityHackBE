@@ -322,5 +322,28 @@ async def execute_graph(request: ApiInput):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    import os
+    
+    # SSL certificate paths
+    ssl_certfile = os.getenv("SSL_CERTFILE", "ssl/cert.pem")
+    ssl_keyfile = os.getenv("SSL_KEYFILE", "ssl/key.pem")
+    
+    # Check if SSL certificates exist
+    use_https = os.path.exists(ssl_certfile) and os.path.exists(ssl_keyfile)
+    
+    if use_https:
+        print(f"Starting server with HTTPS on port 8443")
+        print(f"Certificate: {ssl_certfile}")
+        print(f"Key: {ssl_keyfile}")
+        uvicorn.run(
+            app, 
+            host="0.0.0.0", 
+            port=int(os.getenv("PORT", 8443)),
+            ssl_certfile=ssl_certfile,
+            ssl_keyfile=ssl_keyfile
+        )
+    else:
+        print("SSL certificates not found. Starting server with HTTP on port 8000")
+        print("To enable HTTPS, run: bash generate_ssl_cert.sh")
+        uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
 

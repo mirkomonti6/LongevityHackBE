@@ -42,3 +42,9 @@ build/
 # Large database files (regenerate with llm_parser.py)
 db/biomarkers/data/*.csv
 db/biomarkers/data/*.json
+
+# SSL Certificates
+ssl/
+*.pem
+*.key
+*.crt

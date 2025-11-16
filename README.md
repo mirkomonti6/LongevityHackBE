@@ -267,3 +267,13 @@ If you see a "Graph not initialized" error, wait a moment after starting the ser
 ## License
 
 [Add your license information here]
+
+
+
+DATASET CITATION
+We build our datasets from an elaboration of the dataset
+
+http://mortalitypredictors.org/
+PubMed papers
+
+and we build the application database from there.
