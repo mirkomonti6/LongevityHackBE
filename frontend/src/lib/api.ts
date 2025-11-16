@@ -1,8 +1,10 @@
 import type { OnboardingData } from "./onboarding-schema";
+import type { HabitPlan } from "./tracking-types";
 
 export interface BackendResponse {
   interventionName: string | null;
   responseText: string;
+  plan?: HabitPlan;
 }
 
 export interface ApiInput {
@@ -25,14 +27,28 @@ export interface ApiInput {
   userProfile?: Record<string, any>;
 }
 
+export interface DailyTask {
+  activity: string;
+  steps: number;
+}
+
+export interface Challenge {
+  intervention_name: string;
+  duration_days: number;
+  daily_tasks: DailyTask[];
+  success_criteria?: string;
+  category?: string;
+}
+
 export interface ApiResponse {
   output: {
     response: string;
     intervention_name: string | null;
+    challenge?: Challenge;
   };
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://52.14.71.203:8000";
 
 export async function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -151,14 +167,47 @@ export async function executeBiohackerAgent(
 
     const data: ApiResponse = await response.json();
 
+    // Map challenge to HabitPlan if present, otherwise create fallback plan
+    let plan: HabitPlan | undefined;
+    if (data.output.challenge && data.output.challenge.daily_tasks && data.output.challenge.daily_tasks.length > 0) {
+      plan = {
+        interventionName: data.output.challenge.intervention_name,
+        durationDays: data.output.challenge.duration_days,
+        days: data.output.challenge.daily_tasks.map((task, idx) => ({
+          dayIndex: idx + 1,
+          date: "", // Will be resolved in app-state with start date
+          activity: task.activity,
+          targetSteps: task.steps,
+        })),
+        successCriteria: data.output.challenge.success_criteria,
+        category: data.output.challenge.category,
+      };
+    } else {
+      // Fallback plan: 10-day walking habit with increasing step goals
+      const fallbackSteps = [8000, 8500, 9000, 9000, 9500, 10000, 10000, 10500, 11000, 12000];
+      plan = {
+        interventionName: data.output.intervention_name || "Daily Walking Habit",
+        durationDays: 10,
+        days: fallbackSteps.map((steps, idx) => ({
+          dayIndex: idx + 1,
+          date: "", // Will be resolved in app-state with start date
+          activity: `Day ${idx + 1}: Walk ${steps.toLocaleString()} steps today`,
+          targetSteps: steps,
+        })),
+        successCriteria: "Build sustainable walking habits and improve daily movement",
+        category: "exercise",
+      };
+    }
+
     return {
-      interventionName: data.output.intervention_name || null,
+      interventionName: data.output.intervention_name || plan?.interventionName || null,
       responseText: data.output.response || "",
+      plan,
     };
   } catch (error) {
     if (error instanceof TypeError && error.message.includes("fetch")) {
       throw new Error(
-        "Failed to connect to backend. Make sure the server is running on http://localhost:8000"
+        `Failed to connect to backend at ${API_BASE_URL}. Please check your connection.`
       );
     }
     throw error;

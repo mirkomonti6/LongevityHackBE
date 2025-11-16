@@ -9,7 +9,7 @@ import type { Adherence, Mood } from "@/lib/api-mock";
 import { useRouter } from "next/navigation";
 
 export default function HomePage() {
-  const { primaryLever, backendResponse, todayEntry, updateTodayEntry, dailyEntries, habitStatuses, habitTemplate } =
+  const { primaryLever, backendResponse, todayEntry, updateTodayEntry, dailyEntries, habitStatuses, habitTemplate, resolvedHabitPlan } =
     useAppState();
   const router = useRouter();
   const [isSavingMood, setIsSavingMood] = useState(false);
@@ -50,16 +50,30 @@ export default function HomePage() {
   };
 
   const getStreakData = () => {
-    const last10Days: Array<{ date: string; adherence: string | null }> = [];
+    // Use resolvedHabitPlan if available, otherwise fallback to last 10 days
+    if (resolvedHabitPlan && resolvedHabitPlan.days.length > 0) {
+      const planDays = resolvedHabitPlan.days.map((planDay) => {
+        const status = habitStatuses.find((s) => s.date === planDay.date);
+        const adherence = status?.status === "yes" || status?.status === "partly" ? "yes" : null;
+        return {
+          date: planDay.date,
+          adherence,
+          planDay,
+        };
+      });
 
+      const completed = planDays.filter((e) => e.adherence === "yes").length;
+      return { days: planDays, completed, total: resolvedHabitPlan.days.length };
+    }
+
+    // Fallback: last 10 days
+    const last10Days: Array<{ date: string; adherence: string | null; planDay?: any }> = [];
     for (let i = 0; i < 10; i++) {
       const date = new Date();
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().split("T")[0];
       const status = habitStatuses.find((s) => s.date === dateStr);
-      
       const adherence = status?.status === "yes" || status?.status === "partly" ? "yes" : null;
-      
       last10Days.push({
         date: dateStr,
         adherence,
@@ -71,6 +85,9 @@ export default function HomePage() {
   };
 
   const { days, completed } = getStreakData();
+  
+  // Get today's plan day
+  const todayPlanDay = resolvedHabitPlan?.days.find((day) => day.date === today);
 
   const getMoodEmoji = (mood: Mood | null) => {
     switch (mood) {
@@ -100,7 +117,7 @@ export default function HomePage() {
               Your current habit
             </p>
             <p className="text-2xl font-bold">
-              {backendResponse?.interventionName || primaryLever.name}
+              {resolvedHabitPlan?.interventionName || backendResponse?.interventionName || primaryLever.name}
             </p>
           </div>
           <p className="text-sm text-muted-foreground">
@@ -124,7 +141,7 @@ export default function HomePage() {
         <Card className="p-6 space-y-4">
           <div className="space-y-3">
             <h2 className="text-lg font-semibold">
-              Today's Progresssssss
+              Today's Progress
             </h2>
             {(() => {
               const todayStatus = habitStatuses.find((s) => s.date === today);
@@ -167,6 +184,31 @@ export default function HomePage() {
             })()}
           </div>
         </Card>
+
+        {todayPlanDay && (
+          <Card className="p-6 space-y-4">
+            <div className="space-y-3">
+              <h2 className="text-lg font-semibold">
+                Today's Plan
+              </h2>
+              <div className="space-y-2">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">
+                    Target steps
+                  </p>
+                  <p className="text-3xl font-bold">
+                    {todayPlanDay.targetSteps.toLocaleString()}
+                  </p>
+                </div>
+                <div className="pt-2 border-t">
+                  <p className="text-sm text-muted-foreground">
+                    {todayPlanDay.activity.split(":")[1]?.trim() || todayPlanDay.activity}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
 
         <Card className="p-6 space-y-4">
           <h2 className="text-lg font-semibold">How do you feel today?</h2>
@@ -211,21 +253,64 @@ export default function HomePage() {
                 ringClass = "ring-2 ring-primary/20";
               }
 
+              const planDay = entry.planDay;
+              const tooltipText = planDay 
+                ? `Day ${planDay.dayIndex} – Target ${planDay.targetSteps.toLocaleString()} steps`
+                : (isToday ? "Today" : entry.date);
+
               return (
                 <div
                   key={entry.date}
                   className={`flex-1 h-8 rounded transition-all ${fillClass} ${ringClass} ${
                     isCompleted ? "scale-105" : ""
                   }`}
-                  title={isToday ? "Today" : entry.date}
+                  title={tooltipText}
                 />
               );
             })}
           </div>
           <p className="text-sm text-muted-foreground">
-            {completed} / 10 days with focus completed
+            {completed} / {resolvedHabitPlan?.days.length || 10} days with focus completed
           </p>
         </div>
+
+        {resolvedHabitPlan && resolvedHabitPlan.days.length > 0 && (
+          <Card className="p-6 space-y-4">
+            <div className="space-y-3">
+              <h2 className="text-lg font-semibold">
+                10-Day Plan
+              </h2>
+              <div className="flex gap-2">
+                {resolvedHabitPlan.days.map((planDay) => {
+                  const isToday = planDay.date === today;
+                  const status = habitStatuses.find((s) => s.date === planDay.date);
+                  const isCompleted = status?.status === "yes" || status?.status === "partly";
+                  let fillClass = "bg-muted border border-muted-foreground/20";
+                  let ringClass = "";
+
+                  if (isCompleted) {
+                    fillClass = "bg-primary border-primary";
+                  } else if (isToday) {
+                    fillClass = "bg-background border-2 border-primary";
+                    ringClass = "ring-2 ring-primary/20";
+                  }
+
+                  return (
+                    <div
+                      key={planDay.date}
+                      className={`flex-1 h-10 rounded transition-all ${fillClass} ${ringClass} ${
+                        isCompleted ? "scale-105" : ""
+                      } flex items-center justify-center text-xs font-medium`}
+                      title={`Day ${planDay.dayIndex} – ${planDay.targetSteps.toLocaleString()} steps: ${planDay.activity}`}
+                    >
+                      {planDay.dayIndex}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </Card>
+        )}
       </div>
       <ToastContainer toasts={toasts} onRemove={removeToast} />
     </div>

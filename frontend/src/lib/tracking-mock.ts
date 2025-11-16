@@ -3,6 +3,7 @@ import type {
   DailyMetrics,
   HabitDayStatus,
   HabitStatus,
+  HabitPlan,
 } from "./tracking-types";
 import type { LeverResult, LeverType } from "./api-mock";
 
@@ -56,16 +57,25 @@ function generateMockStressLevel(date: Date): number {
 
 export function generateMockMetrics(
   days: number = 14,
-  leverType?: LeverType
+  leverType?: LeverType,
+  planDates?: string[]
 ): DailyMetrics[] {
   const metrics: DailyMetrics[] = [];
   const today = new Date();
   let baseWeight = 75;
 
   for (let i = 0; i < days; i++) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - i);
-    const dateStr = date.toISOString().split("T")[0];
+    let dateStr: string;
+    let date: Date;
+    
+    if (planDates && planDates[i]) {
+      dateStr = planDates[i];
+      date = new Date(dateStr);
+    } else {
+      date = new Date(today);
+      date.setDate(date.getDate() - i);
+      dateStr = date.toISOString().split("T")[0];
+    }
 
     const dayMetrics: DailyMetrics = {
       date: dateStr,
@@ -104,10 +114,11 @@ export function generateMockMetrics(
 
 function computeStepsHabitStatus(
   metrics: DailyMetrics,
-  rule: HabitTemplate["rule"]
+  rule: HabitTemplate["rule"],
+  targetSteps?: number
 ): HabitStatus {
   const steps = metrics.steps || 0;
-  const minSteps = rule.minSteps || 7000;
+  const minSteps = targetSteps !== undefined ? targetSteps : (rule.minSteps || 7000);
 
   if (steps >= minSteps) {
     return "yes";
@@ -223,15 +234,17 @@ function computeStressHabitStatus(
 export function computeHabitStatus(
   habit: HabitTemplate,
   metrics: DailyMetrics,
-  weekMetrics: DailyMetrics[] = []
+  weekMetrics: DailyMetrics[] = [],
+  targetSteps?: number
 ): HabitDayStatus {
   let status: HabitStatus = "no";
   let reason: string | undefined;
 
   switch (habit.signalSource) {
     case "steps":
-      status = computeStepsHabitStatus(metrics, habit.rule);
-      reason = `You walked ${metrics.steps || 0} steps (target: ${habit.rule.minSteps || 7000})`;
+      status = computeStepsHabitStatus(metrics, habit.rule, targetSteps);
+      const target = targetSteps !== undefined ? targetSteps : (habit.rule.minSteps || 7000);
+      reason = `You walked ${metrics.steps || 0} of ${target} steps today`;
       break;
 
     case "sleep":
@@ -300,7 +313,8 @@ export function computeHabitStatus(
 
 export function computeHabitStatuses(
   habit: HabitTemplate,
-  metricsSeries: DailyMetrics[]
+  metricsSeries: DailyMetrics[],
+  plan?: HabitPlan
 ): HabitDayStatus[] {
   const statuses: HabitDayStatus[] = [];
 
@@ -309,7 +323,16 @@ export function computeHabitStatuses(
     const weekStart = Math.max(0, i - 6);
     const weekMetrics = metricsSeries.slice(weekStart, i + 1);
 
-    const status = computeHabitStatus(habit, metrics, weekMetrics);
+    // Find matching plan day by date
+    let targetSteps: number | undefined;
+    if (plan) {
+      const planDay = plan.days.find((day) => day.date === metrics.date);
+      if (planDay) {
+        targetSteps = planDay.targetSteps;
+      }
+    }
+
+    const status = computeHabitStatus(habit, metrics, weekMetrics, targetSteps);
     statuses.push(status);
   }
 

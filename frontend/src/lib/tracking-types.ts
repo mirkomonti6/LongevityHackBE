@@ -50,3 +50,18 @@ export interface HabitDayStatus {
   metrics?: Partial<DailyMetrics>;
 }
 
+export interface HabitPlanDay {
+  dayIndex: number; // 1-10
+  date: string; // ISO date string (resolved from start date)
+  activity: string; // Text from daily_tasks.activity
+  targetSteps: number; // From daily_tasks.steps
+}
+
+export interface HabitPlan {
+  interventionName: string;
+  durationDays: number;
+  days: HabitPlanDay[];
+  successCriteria?: string;
+  category?: string;
+}
+

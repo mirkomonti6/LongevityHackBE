@@ -16,7 +16,7 @@ import {
   createHabitFromLever,
   getTodayStatus,
 } from "./tracking-mock";
-import type { HabitDayStatus, HabitTemplate } from "./tracking-types";
+import type { HabitDayStatus, HabitTemplate, HabitPlan } from "./tracking-types";
 
 interface AppState {
   onboardingData: OnboardingData | null;
@@ -27,6 +27,9 @@ interface AppState {
   backendResponse: BackendResponse | null;
   habitStatuses: HabitDayStatus[];
   habitTemplate: HabitTemplate | null;
+  habitPlan: HabitPlan | null;
+  habitPlanStartDate: string | null;
+  resolvedHabitPlan: HabitPlan | null;
 }
 
 interface AppStateContextValue extends AppState {
@@ -48,6 +51,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [todayEntry, setTodayEntry] = useState<DailyEntry | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [backendResponse, setBackendResponseState] = useState<BackendResponse | null>(null);
+  const [habitPlan, setHabitPlanState] = useState<HabitPlan | null>(null);
+  const [habitPlanStartDate, setHabitPlanStartDateState] = useState<string | null>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem("longevity_app_onboarding_data");
@@ -76,7 +81,41 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       } catch {
       }
     }
+
+    const storedHabitPlan = localStorage.getItem("longevity_app_habit_plan");
+    if (storedHabitPlan) {
+      try {
+        const plan = JSON.parse(storedHabitPlan);
+        setHabitPlanState(plan);
+      } catch {
+      }
+    }
+
+    const storedHabitPlanStartDate = localStorage.getItem("longevity_app_habit_plan_start_date");
+    if (storedHabitPlanStartDate) {
+      setHabitPlanStartDateState(storedHabitPlanStartDate);
+    }
   }, []);
+
+  // Resolve habit plan with concrete dates
+  const resolvedHabitPlan = useMemo(() => {
+    if (!habitPlan || !habitPlanStartDate) return null;
+    
+    const startDate = new Date(habitPlanStartDate);
+    const resolvedDays = habitPlan.days.map((day) => {
+      const dayDate = new Date(startDate);
+      dayDate.setDate(startDate.getDate() + (day.dayIndex - 1));
+      return {
+        ...day,
+        date: dayDate.toISOString().split("T")[0],
+      };
+    });
+
+    return {
+      ...habitPlan,
+      days: resolvedDays,
+    };
+  }, [habitPlan, habitPlanStartDate]);
 
   const habitTemplate = useMemo(() => {
     if (!primaryLever) return null;
@@ -85,13 +124,20 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
   const mockMetrics = useMemo(() => {
     if (!primaryLever) return [];
+    
+    // If we have a resolved plan, use its dates and generate metrics for exactly those days
+    if (resolvedHabitPlan && resolvedHabitPlan.days.length > 0) {
+      const planDates = resolvedHabitPlan.days.map((day) => day.date);
+      return generateMockMetrics(resolvedHabitPlan.days.length, primaryLever.type, planDates);
+    }
+    
     return generateMockMetrics(14, primaryLever.type);
-  }, [primaryLever]);
+  }, [primaryLever, resolvedHabitPlan]);
 
   const habitStatuses = useMemo(() => {
     if (!habitTemplate || mockMetrics.length === 0) return [];
-    return computeHabitStatuses(habitTemplate, mockMetrics);
-  }, [habitTemplate, mockMetrics]);
+    return computeHabitStatuses(habitTemplate, mockMetrics, resolvedHabitPlan || undefined);
+  }, [habitTemplate, mockMetrics, resolvedHabitPlan]);
 
   const refreshEntries = useCallback(async () => {
     if (!habitTemplate || habitStatuses.length === 0) {
@@ -147,6 +193,20 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const setBackendResponse = useCallback((response: BackendResponse) => {
     setBackendResponseState(response);
     localStorage.setItem("longevity_app_backend_response", JSON.stringify(response));
+
+    // Handle habit plan from response
+    if (response.plan) {
+      setHabitPlanState(response.plan);
+      localStorage.setItem("longevity_app_habit_plan", JSON.stringify(response.plan));
+
+      // Set start date if not already set (relative to today - choice 1b)
+      const currentStartDate = localStorage.getItem("longevity_app_habit_plan_start_date");
+      if (!currentStartDate) {
+        const today = new Date().toISOString().split("T")[0];
+        setHabitPlanStartDateState(today);
+        localStorage.setItem("longevity_app_habit_plan_start_date", today);
+      }
+    }
   }, []);
 
   const updateTodayEntry = useCallback(
@@ -181,6 +241,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         backendResponse,
         habitStatuses,
         habitTemplate,
+        habitPlan,
+        habitPlanStartDate,
+        resolvedHabitPlan,
         setOnboardingData,
         setPrimaryLever,
         setBackendResponse,

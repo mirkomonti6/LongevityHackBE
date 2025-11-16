@@ -7,21 +7,31 @@ import { BranchProgress } from '@/components/progress/branch-progress';
 import { cn } from '@/lib/utils';
 
 export default function ProgressPage() {
-  const { dailyEntries } = useAppState();
+  const { habitStatuses, resolvedHabitPlan } = useAppState();
   const [isPlanted, setIsPlanted] = React.useState(false);
   const [isAnimating, setIsAnimating] = React.useState(false);
 
-  // Streak-Logik bleibt unverändert
+  // Use unified streak logic based on habitStatuses and resolvedHabitPlan
   const getStreakData = () => {
-    const last10Days = dailyEntries.slice(0, 10);
-    const completed = last10Days.filter((e) => e.adherence === 'yes').length;
+    if (resolvedHabitPlan && resolvedHabitPlan.days.length > 0) {
+      // Count completed days from the plan
+      const completed = resolvedHabitPlan.days.filter((planDay) => {
+        const status = habitStatuses.find((s) => s.date === planDay.date);
+        return status?.status === 'yes' || status?.status === 'partly';
+      }).length;
+      return { completed, total: resolvedHabitPlan.days.length };
+    }
+
+    // Fallback: use habitStatuses directly
+    const last10Statuses = habitStatuses.slice(0, 10);
+    const completed = last10Statuses.filter((s) => s.status === 'yes' || s.status === 'partly').length;
     return { completed, total: 10 };
   };
 
-  const { completed } = getStreakData();
+  const { completed, total } = getStreakData();
 
-  // Streak ist komplett bei 10/10
-  const isComplete = completed === 10;
+  // Streak is complete when all plan days are completed
+  const isComplete = completed === total;
 
   const handlePlantTree = () => {
     setIsAnimating(true);
